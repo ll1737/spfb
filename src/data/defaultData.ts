@@ -147,112 +147,20 @@ export const PLATFORMS_META: Record<PlatformId, PlatformMeta> = {
   }
 };
 
-export const INITIAL_ACCOUNTS: Account[] = [
-  {
-    id: 'acc_douyin_01',
-    platform: 'douyin',
-    name: '科技先锋号',
-    nickname: 'TechPioneer',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop',
-    status: 'active',
-    sessionPreview: 'storageState_enc:***9ab4 (有效期 28 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-10T12:00:00Z',
-    followersCount: 42800,
-    stats: { publishedCount: 86, failedCount: 2 }
-  },
-  {
-    id: 'acc_xhs_01',
-    platform: 'xiaohongshu',
-    name: '极简数码日记',
-    nickname: 'MinimalTech',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop',
-    status: 'active',
-    sessionPreview: 'cookie_enc:***41bc (有效期 15 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-15T09:30:00Z',
-    followersCount: 18900,
-    stats: { publishedCount: 54, failedCount: 1 }
-  },
-  {
-    id: 'acc_weibo_01',
-    platform: 'weibo',
-    name: '数码观察站',
-    nickname: 'DigitalObserver',
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop',
-    status: 'active',
-    sessionPreview: 'cookie_enc:***77fa (有效期 60 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-07-20T16:00:00Z',
-    followersCount: 125000,
-    stats: { publishedCount: 210, failedCount: 5 }
-  },
-  {
-    id: 'acc_kuaishou_01',
-    platform: 'kuaishou',
-    name: '智选生活圈',
-    nickname: 'SmartLifeCN',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop',
-    status: 'active',
-    sessionPreview: 'storageState_enc:***e231 (有效期 21 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-25T11:20:00Z',
-    followersCount: 31200,
-    stats: { publishedCount: 42, failedCount: 0 }
-  },
-  {
-    id: 'acc_bili_01',
-    platform: 'bilibili',
-    name: '硬核探索社',
-    nickname: 'HardcoreExplore',
-    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&h=120&fit=crop',
-    status: 'active',
-    sessionPreview: 'cookie_enc:***88dd (有效期 45 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-01T10:00:00Z',
-    followersCount: 88400,
-    stats: { publishedCount: 77, failedCount: 3 }
-  },
-  {
-    id: 'acc_toutiao_01',
-    platform: 'toutiao',
-    name: '每日新科技',
-    nickname: 'DailyNewTech',
-    avatarUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&h=120&fit=crop',
-    status: 'active',
-    sessionPreview: 'storageState_enc:***55ac (有效期 19 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-18T14:45:00Z',
-    followersCount: 65100,
-    stats: { publishedCount: 115, failedCount: 2 }
-  },
-  {
-    id: 'acc_zhihu_01',
-    platform: 'zhihu',
-    name: '深见科技札记',
-    nickname: 'DeepInsights',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop',
-    status: 'active',
-    sessionPreview: 'cookie_enc:***33e1 (有效期 30 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-07-28T08:15:00Z',
-    followersCount: 49700,
-    stats: { publishedCount: 63, failedCount: 1 }
-  },
-  {
-    id: 'acc_wechat_01',
-    platform: 'wechat_mp',
-    name: '未来视界通讯',
-    nickname: 'FutureVisionMag',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop',
-    status: 'need_reauth',
-    sessionPreview: 'token_enc:*** expired (需重新扫码)',
-    lastVerifiedAt: new Date(Date.now() - 3600 * 48 * 1000).toISOString(),
-    createdAt: '2026-06-15T09:00:00Z',
-    followersCount: 52000,
-    stats: { publishedCount: 38, failedCount: 4 }
-  }
-];
+export const INITIAL_ACCOUNTS: Account[] = [];
+
+export const EMPTY_POST: ContentPayload = {
+  title: '',
+  summary: '',
+  contentType: 'note',
+  content: '',
+  coverUrl: '',
+  images: [],
+  videoUrl: '',
+  tags: [],
+  sourceUrl: '',
+  overrides: {}
+};
 
 export const SAMPLE_POST: ContentPayload = {
   title: '2026年多平台内容矩阵分发全流程指南与自动化实战',
@@ -271,7 +179,7 @@ export const SAMPLE_POST: ContentPayload = {
 - **Adapter 模式解耦**：统一 \`publish_article\`、\`publish_note\`、\`publish_video\` 接口；
 - **AES 加密会话**：Playwright storageState 本地加密存储，杜绝明文凭证泄露；
 - **任务分发与重试**：支持定时发布、失败自动重试与截图留证；
-- **双端支持**：既支持标准 Web 浏览器管理，也原生支持 Electron 桌面端快速启动。
+- **全流程管控**：提供一体化 Web 控制台与自动化 Worker 节点协同。
 
 > 提示：发布前请确认各平台已登录，并仔细核对各平台的字数限制与独立话题标签！`,
   coverUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=675&fit=crop',

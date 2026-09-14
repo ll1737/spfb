@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": "usr_admin_default_01",
+      "username": "admin",
+      "email": "ll985141677@gmail.com",
+      "passwordHash": "9b1deb4d3b7d4dd955da13f0ae54e7d9755b76e27303e8b7c9360824b07e7807758ea76b0cbdf746e50e413000b213197361421ab4a0f8b65287fe2a3f7215c2",
+      "salt": "matrix_admin_salt_2026",
+      "nickname": "系统管理员",
+      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=admin",
+      "role": "admin",
+      "teamName": "多平台矩阵运营部",
+      "phone": "13800138000",
+      "bio": "系统默认预置管理员，拥有全平台发布与矩阵账号最高管理权限。",
+      "createdAt": "2026-09-14T04:00:00.000Z",
+      "lastLoginAt": "2026-09-14T04:10:51.479Z"
+    }
+  ],
+  "accounts": [],
+  "jobs": [],
+  "tasks": []
+}

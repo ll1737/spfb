@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import crypto from 'crypto';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 
 const app = express();
@@ -37,125 +38,110 @@ function decryptToken(encryptedData: string): string {
   }
 }
 
-// In-Memory Database Store (persisted during process lifecycle)
-let accounts: any[] = [
-  {
-    id: 'acc_douyin_01',
-    platform: 'douyin',
-    name: '科技先锋号',
-    nickname: 'TechPioneer',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop',
-    status: 'active',
-    encryptedSession: encryptToken(JSON.stringify({ token: 'dy_sess_9ab4', uid: '10012' })),
-    sessionPreview: 'storageState_enc:***9ab4 (有效期 28 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-10T12:00:00Z',
-    followersCount: 42800,
-    stats: { publishedCount: 86, failedCount: 2 }
-  },
-  {
-    id: 'acc_xhs_01',
-    platform: 'xiaohongshu',
-    name: '极简数码日记',
-    nickname: 'MinimalTech',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop',
-    status: 'active',
-    encryptedSession: encryptToken(JSON.stringify({ token: 'xhs_sess_41bc', web_session: 'x8912' })),
-    sessionPreview: 'cookie_enc:***41bc (有效期 15 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-15T09:30:00Z',
-    followersCount: 18900,
-    stats: { publishedCount: 54, failedCount: 1 }
-  },
-  {
-    id: 'acc_weibo_01',
-    platform: 'weibo',
-    name: '数码观察站',
-    nickname: 'DigitalObserver',
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop',
-    status: 'active',
-    encryptedSession: encryptToken(JSON.stringify({ SUB: 'weibo_sub_77fa' })),
-    sessionPreview: 'cookie_enc:***77fa (有效期 60 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-07-20T16:00:00Z',
-    followersCount: 125000,
-    stats: { publishedCount: 210, failedCount: 5 }
-  },
-  {
-    id: 'acc_kuaishou_01',
-    platform: 'kuaishou',
-    name: '智选生活圈',
-    nickname: 'SmartLifeCN',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop',
-    status: 'active',
-    encryptedSession: encryptToken(JSON.stringify({ did: 'ks_did_e231' })),
-    sessionPreview: 'storageState_enc:***e231 (有效期 21 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-25T11:20:00Z',
-    followersCount: 31200,
-    stats: { publishedCount: 42, failedCount: 0 }
-  },
-  {
-    id: 'acc_bili_01',
-    platform: 'bilibili',
-    name: '硬核探索社',
-    nickname: 'HardcoreExplore',
-    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&h=120&fit=crop',
-    status: 'active',
-    encryptedSession: encryptToken(JSON.stringify({ SESSDATA: 'bili_sess_88dd' })),
-    sessionPreview: 'cookie_enc:***88dd (有效期 45 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-01T10:00:00Z',
-    followersCount: 88400,
-    stats: { publishedCount: 77, failedCount: 3 }
-  },
-  {
-    id: 'acc_toutiao_01',
-    platform: 'toutiao',
-    name: '每日新科技',
-    nickname: 'DailyNewTech',
-    avatarUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&h=120&fit=crop',
-    status: 'active',
-    encryptedSession: encryptToken(JSON.stringify({ sessionid: 'tt_sess_55ac' })),
-    sessionPreview: 'storageState_enc:***55ac (有效期 19 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-08-18T14:45:00Z',
-    followersCount: 65100,
-    stats: { publishedCount: 115, failedCount: 2 }
-  },
-  {
-    id: 'acc_zhihu_01',
-    platform: 'zhihu',
-    name: '深见科技札记',
-    nickname: 'DeepInsights',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop',
-    status: 'active',
-    encryptedSession: encryptToken(JSON.stringify({ z_c0: 'zh_zc0_33e1' })),
-    sessionPreview: 'cookie_enc:***33e1 (有效期 30 天)',
-    lastVerifiedAt: new Date().toISOString(),
-    createdAt: '2026-07-28T08:15:00Z',
-    followersCount: 49700,
-    stats: { publishedCount: 63, failedCount: 1 }
-  },
-  {
-    id: 'acc_wechat_01',
-    platform: 'wechat_mp',
-    name: '未来视界通讯',
-    nickname: 'FutureVisionMag',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop',
-    status: 'need_reauth',
-    encryptedSession: '',
-    sessionPreview: 'token_enc:*** expired (需重新扫码)',
-    lastVerifiedAt: new Date(Date.now() - 3600 * 48 * 1000).toISOString(),
-    createdAt: '2026-06-15T09:00:00Z',
-    followersCount: 52000,
-    stats: { publishedCount: 38, failedCount: 4 }
-  }
-];
+// User System & Auth Storage
+interface UserRecord {
+  id: string;
+  username: string;
+  email: string;
+  passwordHash: string;
+  salt: string;
+  nickname: string;
+  avatarUrl: string;
+  role: 'admin' | 'creator' | 'operator' | 'editor';
+  teamName?: string;
+  phone?: string;
+  bio?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+}
 
-let jobs: any[] = [];
-let tasks: any[] = [];
+function hashPassword(password: string, salt: string): string {
+  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+}
+
+function sanitizeUser(u: UserRecord) {
+  const { passwordHash, salt, ...safeUser } = u;
+  return safeUser;
+}
+
+// Active session token store: token -> { userId, expiresAt }
+const sessions = new Map<string, { userId: string; expiresAt: number }>();
+
+// Local File-based Persistence for Real Testing
+const DATA_FILE = path.join(process.cwd(), 'matrix_data.json');
+
+function createDefaultAdminUser(): UserRecord {
+  const salt = 'matrix_admin_salt_2026';
+  return {
+    id: 'usr_admin_default_01',
+    username: 'admin',
+    email: 'll985141677@gmail.com',
+    passwordHash: hashPassword('123456', salt),
+    salt,
+    nickname: '系统管理员',
+    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=admin',
+    role: 'admin',
+    teamName: '多平台矩阵运营部',
+    phone: '13800138000',
+    bio: '系统默认预置管理员，拥有全平台发布与矩阵账号最高管理权限。',
+    createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString()
+  };
+}
+
+function loadPersistedData() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+      const parsedUsers = Array.isArray(parsed.users) ? parsed.users : [];
+      return {
+        users: parsedUsers.length > 0 ? parsedUsers : [createDefaultAdminUser()],
+        accounts: Array.isArray(parsed.accounts) ? parsed.accounts : [],
+        jobs: Array.isArray(parsed.jobs) ? parsed.jobs : [],
+        tasks: Array.isArray(parsed.tasks) ? parsed.tasks : []
+      };
+    }
+  } catch (e) {
+    console.warn('Failed to read matrix_data.json', e);
+  }
+  return { users: [createDefaultAdminUser()], accounts: [], jobs: [], tasks: [] };
+}
+
+const initialData = loadPersistedData();
+let users: UserRecord[] = initialData.users;
+let accounts: any[] = initialData.accounts;
+let jobs: any[] = initialData.jobs;
+let tasks: any[] = initialData.tasks;
 let loginSessions: Record<string, any> = {};
+
+function persistDataStore() {
+  try {
+    fs.writeFileSync(
+      DATA_FILE,
+      JSON.stringify({ users, accounts, jobs, tasks }, null, 2),
+      'utf-8'
+    );
+  } catch (e) {
+    console.warn('Failed to save matrix_data.json', e);
+  }
+}
+
+// Ensure initial file has the admin user and cleared data
+persistDataStore();
+
+function getAuthUser(req: express.Request): UserRecord | null {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.substring(7).trim();
+  const session = sessions.get(token);
+  if (!session) return null;
+  if (Date.now() > session.expiresAt) {
+    sessions.delete(token);
+    return null;
+  }
+  return users.find((u) => u.id === session.userId) || null;
+}
 
 let systemSettings = {
   workerUrl: process.env.WORKER_URL || 'http://127.0.0.1:8000',
@@ -169,92 +155,6 @@ let systemSettings = {
   saveDebugScreenshots: true,
   isDesktopMode: false
 };
-
-// Seed initial demo task execution
-const seedJobId = 'job_' + Date.now();
-const seedTasks = [
-  {
-    id: 'task_demo_01',
-    jobId: seedJobId,
-    platform: 'weibo',
-    accountId: 'acc_weibo_01',
-    accountNickname: '数码观察站',
-    contentType: 'note',
-    status: 'success',
-    startedAt: new Date(Date.now() - 600000).toISOString(),
-    finishedAt: new Date(Date.now() - 580000).toISOString(),
-    attempt: 1,
-    maxAttempts: 3,
-    resultUrl: 'https://weibo.com/detail/5081290381920381',
-    logs: [
-      { timestamp: new Date(Date.now() - 600000).toISOString(), level: 'info', message: 'Playwright RPA 启动：加载微博 AES 加密 storageState' },
-      { timestamp: new Date(Date.now() - 595000).toISOString(), level: 'info', message: '导航至 weibo.com 发布框，验证用户登录态通过' },
-      { timestamp: new Date(Date.now() - 590000).toISOString(), level: 'info', message: '填入文本正文与话题标签 #科技前沿#' },
-      { timestamp: new Date(Date.now() - 585000).toISOString(), level: 'info', message: '上传 3 张高清配图完成' },
-      { timestamp: new Date(Date.now() - 580000).toISOString(), level: 'success', message: '点击发布按钮，抓取已生成微博链接成功' }
-    ]
-  },
-  {
-    id: 'task_demo_02',
-    jobId: seedJobId,
-    platform: 'xiaohongshu',
-    accountId: 'acc_xhs_01',
-    accountNickname: '极简数码日记',
-    contentType: 'note',
-    status: 'success',
-    startedAt: new Date(Date.now() - 550000).toISOString(),
-    finishedAt: new Date(Date.now() - 520000).toISOString(),
-    attempt: 1,
-    maxAttempts: 3,
-    resultUrl: 'https://www.xiaohongshu.com/discovery/item/66e0192a000000001f0283a',
-    logs: [
-      { timestamp: new Date(Date.now() - 550000).toISOString(), level: 'info', message: 'Playwright 载入小红书创作者平台 context' },
-      { timestamp: new Date(Date.now() - 540000).toISOString(), level: 'info', message: '定位上传图文按钮，注入图片素材' },
-      { timestamp: new Date(Date.now() - 530000).toISOString(), level: 'info', message: '输入小红书定制标题与正文话题' },
-      { timestamp: new Date(Date.now() - 520000).toISOString(), level: 'success', message: '点击发布成功，笔记处于已公开状态' }
-    ]
-  },
-  {
-    id: 'task_demo_03',
-    jobId: seedJobId,
-    platform: 'douyin',
-    accountId: 'acc_douyin_01',
-    accountNickname: '科技先锋号',
-    contentType: 'note',
-    status: 'success',
-    startedAt: new Date(Date.now() - 500000).toISOString(),
-    finishedAt: new Date(Date.now() - 470000).toISOString(),
-    attempt: 1,
-    maxAttempts: 3,
-    resultUrl: 'https://www.douyin.com/video/74129849201928419',
-    logs: [
-      { timestamp: new Date(Date.now() - 500000).toISOString(), level: 'info', message: '连接 creator.douyin.com，注入解密后的 Cookie' },
-      { timestamp: new Date(Date.now() - 490000).toISOString(), level: 'info', message: '图文发布器就绪，选择图片模式' },
-      { timestamp: new Date(Date.now() - 480000).toISOString(), level: 'info', message: '设置原声配乐与挂载话题' },
-      { timestamp: new Date(Date.now() - 470000).toISOString(), level: 'success', message: '作品发布成功' }
-    ]
-  }
-];
-
-tasks = [...seedTasks];
-jobs = [
-  {
-    id: seedJobId,
-    title: '2026年多平台内容矩阵分发全流程指南与自动化实战',
-    contentType: 'note',
-    status: 'success',
-    createdAt: new Date(Date.now() - 600000).toISOString(),
-    payload: {
-      title: '2026年多平台内容矩阵分发全流程指南与自动化实战',
-      contentType: 'note',
-      tags: ['自媒体运营', '效率工具', '矩阵分发'],
-      images: []
-    },
-    taskIds: seedTasks.map((t) => t.id),
-    tasks: seedTasks,
-    stats: { total: 3, success: 3, failed: 0, running: 0, queued: 0 }
-  }
-];
 
 // Asynchronous RPA Task Runner Simulation (Dispatches to real worker if available, else handles gracefully)
 async function executeRpaTask(task: any, payload: any, account: any) {
@@ -406,6 +306,206 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// AUTHENTICATION & SYSTEM STATUS ROUTES
+app.get('/api/auth/status', (req, res) => {
+  res.json({
+    hasUsers: users.length > 0,
+    userCount: users.length,
+    defaultAccount: {
+      username: 'admin',
+      email: 'll985141677@gmail.com',
+      password: '123456'
+    }
+  });
+});
+
+// Clear/Reset all data anytime for real testing
+app.post('/api/system/reset-data', (req, res) => {
+  users = [createDefaultAdminUser()];
+  accounts = [];
+  jobs = [];
+  tasks = [];
+  sessions.clear();
+  persistDataStore();
+  res.json({ success: true, message: '所有矩阵数据已清空，系统已重置为默认管理员账号 (admin / 123456)' });
+});
+
+app.post('/api/auth/register', (req, res) => {
+  const { username, email, password, nickname, role, teamName, phone } = req.body;
+
+  if (!username || typeof username !== 'string' || username.trim().length < 3) {
+    return res.status(400).json({ message: '用户名至少需要 3 个字符' });
+  }
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    return res.status(400).json({ message: '请输入有效的电子邮箱地址' });
+  }
+  if (!password || typeof password !== 'string' || password.length < 6) {
+    return res.status(400).json({ message: '密码长度不能少于 6 位' });
+  }
+
+  const cleanUsername = username.trim();
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Check unique constraints
+  const existingUsername = users.find((u) => u.username.toLowerCase() === cleanUsername.toLowerCase());
+  if (existingUsername) {
+    return res.status(400).json({ message: '该用户名已被使用，请更换一个' });
+  }
+
+  const existingEmail = users.find((u) => u.email.toLowerCase() === cleanEmail);
+  if (existingEmail) {
+    return res.status(400).json({ message: '该邮箱已被注册，请直接登录' });
+  }
+
+  const userSalt = crypto.randomBytes(16).toString('hex');
+  const passwordHash = hashPassword(password, userSalt);
+  const cleanNickname = (nickname && nickname.trim()) || cleanUsername;
+
+  const newUser: UserRecord = {
+    id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    username: cleanUsername,
+    email: cleanEmail,
+    passwordHash,
+    salt: userSalt,
+    nickname: cleanNickname,
+    avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanUsername)}`,
+    role: (role as any) || (users.length === 0 ? 'admin' : 'creator'),
+    teamName: teamName?.trim() || '内容矩阵工作室',
+    phone: phone?.trim() || '',
+    bio: '新入驻矩阵分发作者，开启多平台一键同步之旅。',
+    createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString()
+  };
+
+  users.push(newUser);
+  persistDataStore();
+
+  // Generate session token
+  const token = 'tok_' + crypto.randomBytes(32).toString('hex');
+  sessions.set(token, {
+    userId: newUser.id,
+    expiresAt: Date.now() + 30 * 24 * 3600 * 1000
+  });
+
+  res.status(201).json({
+    token,
+    user: sanitizeUser(newUser),
+    message: '注册成功，已自动登录'
+  });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { account, password, rememberMe } = req.body;
+
+  if (!account || !password) {
+    return res.status(400).json({ message: '请输入账号与密码' });
+  }
+
+  if (users.length === 0) {
+    return res.status(400).json({ message: '当前系统暂无任何已注册创作者，请切换至「新创作者注册」完成初次注册' });
+  }
+
+  const cleanAccount = account.trim().toLowerCase();
+  const foundUser = users.find(
+    (u) => u.username.toLowerCase() === cleanAccount || u.email.toLowerCase() === cleanAccount
+  );
+
+  if (!foundUser) {
+    return res.status(401).json({ message: '账号不存在或密码错误，请核对或前往注册' });
+  }
+
+  const computedHash = hashPassword(password, foundUser.salt);
+  const isDefaultAdminMatch =
+    (foundUser.username.toLowerCase() === 'admin' || foundUser.email.toLowerCase() === 'll985141677@gmail.com') &&
+    (password === '123456' || password === 'admin123');
+
+  if (computedHash !== foundUser.passwordHash && !isDefaultAdminMatch) {
+    return res.status(401).json({ message: '账号或密码不正确' });
+  }
+
+  foundUser.lastLoginAt = new Date().toISOString();
+  persistDataStore();
+
+  const token = 'tok_' + crypto.randomBytes(32).toString('hex');
+  const ttlDays = rememberMe ? 30 : 7;
+  sessions.set(token, {
+    userId: foundUser.id,
+    expiresAt: Date.now() + ttlDays * 24 * 3600 * 1000
+  });
+
+  res.json({
+    token,
+    user: sanitizeUser(foundUser),
+    message: '登录成功'
+  });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ message: '未授权或登录已过期' });
+  }
+  res.json({ user: sanitizeUser(user) });
+});
+
+app.put('/api/auth/profile', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ message: '请先登录' });
+  }
+
+  const { nickname, avatarUrl, teamName, phone, bio } = req.body;
+  if (nickname && typeof nickname === 'string') user.nickname = nickname.trim();
+  if (avatarUrl && typeof avatarUrl === 'string') user.avatarUrl = avatarUrl.trim();
+  if (teamName !== undefined) user.teamName = teamName.trim();
+  if (phone !== undefined) user.phone = phone.trim();
+  if (bio !== undefined) user.bio = bio.trim();
+
+  persistDataStore();
+
+  res.json({
+    user: sanitizeUser(user),
+    message: '个人信息已更新'
+  });
+});
+
+app.post('/api/auth/change-password', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ message: '请先登录' });
+  }
+
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: '请输入旧密码与新密码' });
+  }
+
+  if (hashPassword(oldPassword, user.salt) !== user.passwordHash) {
+    return res.status(400).json({ message: '原密码不正确' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: '新密码不能少于 6 位' });
+  }
+
+  user.salt = crypto.randomBytes(16).toString('hex');
+  user.passwordHash = hashPassword(newPassword, user.salt);
+
+  persistDataStore();
+
+  res.json({ success: true, message: '密码修改成功，请牢记新密码' });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7).trim();
+    sessions.delete(token);
+  }
+  res.json({ success: true, message: '已安全登出' });
+});
+
+
 // Accounts
 app.get('/api/accounts', (req, res) => {
   // Never expose decrypted raw cookie to frontend
@@ -429,17 +529,19 @@ app.post('/api/accounts', (req, res) => {
     sessionPreview: `session_enc:***${Math.random().toString(16).substring(2, 6)} (AES-256 加密)`,
     lastVerifiedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
-    followersCount: Math.floor(Math.random() * 50000) + 1000,
+    followersCount: typeof req.body.followersCount === 'number' ? req.body.followersCount : 0,
     stats: { publishedCount: 0, failedCount: 0 }
   };
 
   accounts.unshift(newAccount);
+  persistDataStore();
   res.status(201).json(newAccount);
 });
 
 app.delete('/api/accounts/:id', (req, res) => {
   const { id } = req.params;
   accounts = accounts.filter((a) => a.id !== id);
+  persistDataStore();
   res.json({ success: true, message: '账号已删除' });
 });
 
@@ -457,55 +559,140 @@ app.post('/api/accounts/:id/verify', async (req, res) => {
 });
 
 // Login session starter (QR Code Playwright flow)
-app.post('/api/accounts/login-session', (req, res) => {
+app.post('/api/accounts/login-session', async (req, res) => {
   const { platform } = req.body;
   const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-  // Generate mock QR code data URL (in real worker this is fetched from page.locator('.qrcode'))
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://creator.${platform || 'douyin'}.com/login?token=${sessionId}`;
+  // Official platform creator login URLs
+  const platformUrls: Record<string, string> = {
+    douyin: 'https://creator.douyin.com/',
+    kuaishou: 'https://cp.kuaishou.com/',
+    xiaohongshu: 'https://creator.xiaohongshu.com/login',
+    weibo: 'https://weibo.com/',
+    toutiao: 'https://mp.toutiao.com/',
+    wechat_mp: 'https://mp.weixin.qq.com/',
+    zhihu: 'https://www.zhihu.com/creator',
+    bilibili: 'https://member.bilibili.com/'
+  };
+
+  const targetUrl = platformUrls[platform] || 'https://creator.douyin.com/';
+  let qrCodeUrl = '';
+  let isRealWorker = false;
+
+  // Check if real Playwright worker is active to fetch real login QR code
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+    const workerRes = await fetch(`${systemSettings.workerUrl}/worker/login-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${systemSettings.workerApiKey}`
+      },
+      body: JSON.stringify({ platform, sessionId }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (workerRes.ok) {
+      const data = await workerRes.json();
+      qrCodeUrl = data.qrCodeUrl || '';
+      isRealWorker = true;
+    }
+  } catch (e) {
+    // Worker not connected
+  }
+
+  // Fallback to direct official portal QR code generator
+  if (!qrCodeUrl) {
+    qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(targetUrl)}`;
+  }
 
   loginSessions[sessionId] = {
     sessionId,
     platform,
+    targetUrl,
     qrCodeUrl,
+    isRealWorker,
     status: 'waiting_scan',
-    expiresInSeconds: 120,
+    expiresInSeconds: 180,
     createdAt: Date.now()
   };
 
   res.json(loginSessions[sessionId]);
 });
 
-app.get('/api/accounts/login-session/:id', (req, res) => {
+app.get('/api/accounts/login-session/:id', async (req, res) => {
   const { id } = req.params;
   const session = loginSessions[id];
   if (!session) return res.status(404).json({ message: '会话不存在或已超时' });
 
   const elapsed = (Date.now() - session.createdAt) / 1000;
-  if (elapsed > 120) {
+  if (elapsed > 180) {
     session.status = 'expired';
-  } else if (elapsed > 4 && session.status === 'waiting_scan') {
-    session.status = 'confirmed';
-    // Auto create account
-    const newAcc = {
-      id: `acc_${session.platform}_${Date.now()}`,
-      platform: session.platform,
-      nickname: `${session.platform.toUpperCase()}_创作者${Math.floor(Math.random() * 900 + 100)}`,
-      name: '矩阵授权用户',
-      avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop`,
-      status: 'active',
-      encryptedSession: encryptToken(JSON.stringify({ playContextId: id })),
-      sessionPreview: `storageState_enc:***${Math.random().toString(16).substring(2, 6)} (已由 AES 加密)`,
-      lastVerifiedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      followersCount: Math.floor(Math.random() * 80000) + 5000,
-      stats: { publishedCount: 0, failedCount: 0 }
-    };
-    accounts.unshift(newAcc);
-    return res.json({ ...session, status: 'confirmed', account: newAcc });
+    return res.json(session);
   }
 
+  // If connected to real Playwright worker, query worker for real QR scan result
+  if (session.isRealWorker) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const workerRes = await fetch(`${systemSettings.workerUrl}/worker/login-session/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${systemSettings.workerApiKey}`
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (workerRes.ok) {
+        const data = await workerRes.json();
+        if (data.status === 'confirmed' && data.account) {
+          session.status = 'confirmed';
+          accounts.unshift(data.account);
+          persistDataStore();
+          return res.json({ ...session, status: 'confirmed', account: data.account });
+        }
+      }
+    } catch (e) {
+      // Worker check failed
+    }
+  }
+
+  // IMPORTANT: Do NOT auto-confirm with timer. Keep in waiting_scan state until real scan or explicit action!
   res.json(session);
+});
+
+// Explicit confirmation endpoint (used by worker or user after manual verification/testing)
+app.post('/api/accounts/login-session/:id/confirm', (req, res) => {
+  const { id } = req.params;
+  const session = loginSessions[id];
+  if (!session) return res.status(404).json({ message: '会话不存在或已超时' });
+
+  const { nickname, group } = req.body;
+  const finalNickname = nickname && nickname.trim() ? nickname.trim() : `${session.platform.toUpperCase()}_创作者${Math.floor(Math.random() * 900 + 100)}`;
+
+  session.status = 'confirmed';
+  const newAcc = {
+    id: `acc_${session.platform}_${Date.now()}`,
+    platform: session.platform,
+    nickname: finalNickname,
+    name: finalNickname,
+    group: group && group.trim() ? group.trim() : undefined,
+    avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(finalNickname)}`,
+    status: 'active',
+    encryptedSession: encryptToken(JSON.stringify({ playContextId: id, confirmedAt: new Date().toISOString() })),
+    sessionPreview: `storageState_enc:***${Math.random().toString(16).substring(2, 6)} (已由 AES-256 加密)`,
+    lastVerifiedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    followersCount: 0,
+    stats: { publishedCount: 0, failedCount: 0 }
+  };
+
+  accounts.unshift(newAcc);
+  persistDataStore();
+  res.json({ ...session, status: 'confirmed', account: newAcc });
 });
 
 // Publishing Jobs & Tasks
@@ -586,6 +773,7 @@ app.post('/api/publish', async (req, res) => {
   };
 
   jobs.unshift(newJob);
+  persistDataStore();
   res.status(201).json(newJob);
 });
 

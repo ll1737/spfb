@@ -8,11 +8,12 @@ import {
   Laptop, 
   CheckCircle2, 
   AlertCircle, 
-  RefreshCw,
-  Terminal,
-  FolderOpen,
-  Sliders,
-  Cpu
+  RefreshCw, 
+  Terminal, 
+  FolderOpen, 
+  Sliders, 
+  Cpu,
+  Trash2
 } from 'lucide-react';
 import { SystemSettings } from '../types';
 import { api } from '../lib/api';
@@ -249,6 +250,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <p className="text-[11px] text-emerald-800 leading-relaxed">
               系统严格遵循安全准则：数据库中只持久化密文凭证，前端接口禁止传输明文 Cookie；Worker 进程在分发任务时使用系统私钥解密并注入 Playwright 独立 Context，任务结束后自动清除内存句柄。
             </p>
+          </div>
+        </div>
+
+        {/* Data Reset & Environment Clean */}
+        <div className="p-6 rounded-2xl bg-white border border-rose-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-rose-100 pb-3">
+            <div className="flex items-center gap-2 text-rose-700">
+              <Trash2 className="w-4 h-4" />
+              <h4 className="text-sm font-bold">真实测试环境重置 (清空所有运行数据)</h4>
+            </div>
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 font-medium">
+              危险操作
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <p className="text-xs text-neutral-600 leading-relaxed max-w-xl">
+              一键彻底清空系统中的所有注册创作者、关联自媒体账号、发布任务与历史凭证，恢复纯净出厂状态以供您随时重新进行实操验收。
+            </p>
+
+            <button
+              type="button"
+              onClick={async () => {
+                if (window.confirm('警告：此操作将清空所有矩阵账号和发布任务，并将系统恢复为默认管理员 (admin / 123456)！确定要继续吗？')) {
+                  try {
+                    await api.resetData();
+                    alert('数据已清空！已重置为默认管理员账号 (admin / 123456)。');
+                    window.location.reload();
+                  } catch (e: any) {
+                    alert('重置失败: ' + (e.message || '未知错误'));
+                  }
+                }
+              }}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-all shrink-0 flex items-center gap-1.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>清空所有数据并重新测试</span>
+            </button>
           </div>
         </div>
       </form>

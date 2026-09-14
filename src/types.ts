@@ -36,6 +36,7 @@ export interface Account {
   nickname: string;
   avatarUrl: string;
   status: 'active' | 'expired' | 'need_reauth' | 'logging_in';
+  group?: string; // e.g. "数码科技组", "生活消费组"
   encryptedSession?: string; // AES encrypted storageState or cookie json
   sessionPreview?: string;  // e.g. "auth_token: ***8a9f (Expires in 14 days)"
   lastVerifiedAt: string;
@@ -93,9 +94,11 @@ export interface PublishTask {
   accountNickname?: string;
   contentType: ContentType;
   status: TaskStatus;
+  createdAt?: string;
   scheduledAt?: string;
   startedAt?: string;
   finishedAt?: string;
+  completedAt?: string;
   attempt: number;
   maxAttempts: number;
   errorCode?: string;
@@ -137,7 +140,7 @@ export interface SystemSettings {
   autoRetryFailed: boolean;
   maxRetries: number;
   saveDebugScreenshots: boolean;
-  isDesktopMode: boolean;
+  isDesktopMode?: boolean;
 }
 
 export interface LoginSessionResponse {
@@ -146,4 +149,42 @@ export interface LoginSessionResponse {
   qrCodeUrl?: string;
   status: 'waiting_scan' | 'scanned' | 'confirmed' | 'expired' | 'error';
   expiresInSeconds: number;
+}
+
+export type UserRole = 'admin' | 'creator' | 'operator' | 'editor';
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  nickname: string;
+  avatarUrl: string;
+  role: UserRole;
+  teamName?: string;
+  phone?: string;
+  bio?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+  message?: string;
+}
+
+export interface LoginPayload {
+  account: string; // username or email
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface RegisterPayload {
+  username: string;
+  email: string;
+  password: string;
+  nickname: string;
+  role?: UserRole;
+  teamName?: string;
+  phone?: string;
 }

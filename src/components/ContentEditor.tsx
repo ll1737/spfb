@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   FileText, 
   Image as ImageIcon, 
@@ -12,10 +12,13 @@ import {
   Tags, 
   Link as LinkIcon,
   Sliders,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck
 } from 'lucide-react';
 import { ContentPayload, ContentType, PlatformId } from '../types';
 import { PLATFORMS_META, SAMPLE_POST } from '../data/defaultData';
+import { ComplianceModal } from './ComplianceModal';
+import { checkContentCompliance } from '../lib/compliance';
 
 interface ContentEditorProps {
   content: ContentPayload;
@@ -33,6 +36,9 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   const [newImageUrl, setNewImageUrl] = useState('');
   const [showOverrides, setShowOverrides] = useState(false);
   const [selectedOverridePlatform, setSelectedOverridePlatform] = useState<PlatformId>('weibo');
+  const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
+
+  const complianceResult = useMemo(() => checkContentCompliance(content), [content]);
 
   const contentTypes: { id: ContentType; label: string; icon: any; desc: string }[] = [
     { id: 'article', label: '长文章 / 专栏', icon: FileText, desc: '知乎专栏、头条文章、公众号长文、B站专栏' },
@@ -107,6 +113,26 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsComplianceModalOpen(true)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+              complianceResult.score >= 85
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                : complianceResult.score >= 60
+                ? 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100'
+                : 'bg-rose-50 border-rose-200 text-rose-800 hover:bg-rose-100'
+            }`}
+            title="查看全平台合规诊断与敏感极限词"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>合规与抗风控预审</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+              complianceResult.score >= 85 ? 'bg-emerald-200 text-emerald-900' : 'bg-amber-200 text-amber-900'
+            }`}>
+              {complianceResult.score}分
+            </span>
+          </button>
+
           <button
             onClick={handleLoadSample}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
@@ -449,6 +475,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Compliance & Risk Modal */}
+      <ComplianceModal
+        isOpen={isComplianceModalOpen}
+        onClose={() => setIsComplianceModalOpen(false)}
+        content={content}
+        onApplyFixes={onChange}
+      />
     </div>
   );
 };

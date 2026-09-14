@@ -10,7 +10,7 @@ import {
   RefreshCw,
   TrendingUp,
   ShieldCheck,
-  Laptop
+  ListTodo
 } from 'lucide-react';
 import { Account, PublishJob, PublishTask, PlatformId } from '../types';
 import { PLATFORMS_META } from '../data/defaultData';
@@ -42,7 +42,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const failedTasks = tasks.filter((t) => t.status === 'failed').length;
   const runningTasks = tasks.filter((t) => t.status === 'running').length;
   const queuedTasks = tasks.filter((t) => t.status === 'queued').length;
-  const successRate = totalTasks > 0 ? Math.round((successTasks / totalTasks) * 100) : 100;
+  const successRate = totalTasks > 0 ? `${Math.round((successTasks / totalTasks) * 100)}%` : '—';
 
   const activeAccounts = accounts.filter((a) => a.status === 'active').length;
   const expiredAccounts = accounts.filter((a) => a.status !== 'active').length;
@@ -59,16 +59,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="text-sm">
               <span className="font-semibold">Playwright RPA Worker 尚未启动或正在连接：</span>
               <span className="text-amber-800 ml-1">
-                Web 控制台已就绪，若需调度本地真实浏览器自动化发布，请启动 Python Worker 或使用本地 Electron 桌面端。
+                Web 控制台已就绪，若需调度本地真实浏览器自动化发布，请启动本地 Worker 自动化节点。
               </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onNavigate('electron')}
+              onClick={() => onNavigate('settings')}
               className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg shadow-xs"
             >
-              查看桌面端/Worker启动指南
+              查看 Worker 节点设置
             </button>
           </div>
         </div>
@@ -103,7 +103,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </span>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-emerald-600">{successRate}%</div>
+            <div className="text-2xl font-bold text-emerald-600">{successRate}</div>
             <div className="text-xs text-neutral-500 mt-1 flex items-center gap-2">
               <span className="text-emerald-700 font-medium">成功 {successTasks}</span>
               <span>/</span>
@@ -345,11 +345,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <span>立即体验一键矩阵发布</span>
             </button>
             <button
-              onClick={() => onNavigate('electron')}
+              onClick={() => onNavigate('tasks')}
               className="w-full py-2 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium text-xs rounded-xl flex items-center justify-center gap-2 transition-colors"
             >
-              <Laptop className="w-3.5 h-3.5 text-blue-400" />
-              <span>启动 Electron 桌面客户端</span>
+              <ListTodo className="w-3.5 h-3.5 text-neutral-400" />
+              <span>查看发布任务队列</span>
             </button>
           </div>
         </div>

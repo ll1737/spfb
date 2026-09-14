@@ -1,6 +1,6 @@
 {
   "name": "多平台一键发布系统",
-  "description": "支持抖音、快手、小红书、微博、头条、微信公众号、知乎、B站的多平台内容发布管理系统，支持 Web 与 Electron 桌面端。",
+  "description": "支持抖音、快手、小红书、微博、头条、微信公众号、知乎、B站的多平台内容矩阵发布与运营管理系统。",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

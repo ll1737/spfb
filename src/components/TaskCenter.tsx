@@ -13,11 +13,14 @@ import {
   Terminal,
   Filter,
   X,
-  Play
+  Play,
+  List,
+  Calendar
 } from 'lucide-react';
 import { PublishTask, TaskStatus, PlatformId } from '../types';
 import { PLATFORMS_META } from '../data/defaultData';
 import { api } from '../lib/api';
+import { CalendarView } from './CalendarView';
 
 interface TaskCenterProps {
   tasks: PublishTask[];
@@ -25,6 +28,7 @@ interface TaskCenterProps {
 }
 
 export const TaskCenter: React.FC<TaskCenterProps> = ({ tasks, onRefresh }) => {
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,6 +107,32 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({ tasks, onRefresh }) => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* View Mode Toggle: List vs Calendar */}
+          <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === 'list'
+                  ? 'bg-white text-neutral-900 shadow-xs'
+                  : 'text-neutral-500 hover:text-neutral-900'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>任务列表</span>
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === 'calendar'
+                  ? 'bg-white text-neutral-900 shadow-xs'
+                  : 'text-neutral-500 hover:text-neutral-900'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>排期日历</span>
+            </button>
+          </div>
+
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
             <input
@@ -110,7 +140,7 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({ tasks, onRefresh }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索任务 ID / 账号 / 错误..."
-              className="pl-8 pr-3 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:bg-white w-52"
+              className="pl-8 pr-3 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:bg-white w-48"
             />
           </div>
 
@@ -124,24 +154,28 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({ tasks, onRefresh }) => {
         </div>
       </div>
 
-      {/* Task List */}
-      <div className="space-y-3">
-        {filteredTasks.length === 0 ? (
-          <div className="p-12 text-center bg-white rounded-2xl border border-neutral-200 shadow-xs text-neutral-400 text-sm">
-            没有匹配的发布任务记录
-          </div>
-        ) : (
-          filteredTasks.map((task) => {
-            const meta = PLATFORMS_META[task.platform];
-            const isSuccess = task.status === 'success';
-            const isFailed = task.status === 'failed';
-            const isRunning = task.status === 'running';
+      {/* View Content: Calendar or Task List */}
+      {viewMode === 'calendar' ? (
+        <CalendarView tasks={tasks} onSelectTask={(task) => setActiveTaskForLogs(task)} />
+      ) : (
+        /* Task List */
+        <div className="space-y-3">
+          {filteredTasks.length === 0 ? (
+            <div className="p-12 text-center bg-white rounded-2xl border border-neutral-200 shadow-xs text-neutral-400 text-sm">
+              没有匹配的发布任务记录
+            </div>
+          ) : (
+            filteredTasks.map((task) => {
+              const meta = PLATFORMS_META[task.platform];
+              const isSuccess = task.status === 'success';
+              const isFailed = task.status === 'failed';
+              const isRunning = task.status === 'running';
 
-            return (
-              <div
-                key={task.id}
-                className="p-5 rounded-2xl bg-white border border-neutral-200 shadow-xs space-y-4 hover:border-neutral-300 transition-all"
-              >
+              return (
+                <div
+                  key={task.id}
+                  className="p-5 rounded-2xl bg-white border border-neutral-200 shadow-xs space-y-4 hover:border-neutral-300 transition-all"
+                >
                 {/* Header: Platform, Account, Task ID, Status */}
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
@@ -299,6 +333,7 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({ tasks, onRefresh }) => {
           })
         )}
       </div>
+      )}
 
       {/* Task Logs Modal */}
       {activeTaskForLogs && (

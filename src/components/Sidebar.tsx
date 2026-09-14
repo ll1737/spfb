@@ -5,7 +5,6 @@ import {
   ListTodo, 
   Users, 
   Settings, 
-  Laptop, 
   Send,
   Layers,
   Sparkles
@@ -17,6 +16,8 @@ interface SidebarProps {
   activeAccountsCount: number;
   totalAccountsCount: number;
   pendingTasksCount: number;
+  currentUser?: import('../types').User | null;
+  onOpenProfile?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -24,7 +25,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   activeAccountsCount,
   totalAccountsCount,
-  pendingTasksCount
+  pendingTasksCount,
+  currentUser,
+  onOpenProfile
 }) => {
   const menuItems = [
     {
@@ -52,13 +55,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Users,
       badge: `${activeAccountsCount}/${totalAccountsCount}`,
       badgeColor: activeAccountsCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-100 text-neutral-600'
-    },
-    {
-      id: 'electron',
-      label: 'Electron 桌面端',
-      icon: Laptop,
-      badge: '原生客户端',
-      badgeColor: 'bg-blue-100 text-blue-800'
     },
     {
       id: 'settings',
@@ -135,6 +131,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="p-1 rounded bg-neutral-100 font-medium">B站</div>
         </div>
       </div>
+
+      {/* Current User Card */}
+      {currentUser && (
+        <div className="mx-3 mb-2 p-2.5 rounded-xl bg-white border border-neutral-200 shadow-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <img
+              src={currentUser.avatarUrl}
+              alt={currentUser.nickname}
+              className="w-8 h-8 rounded-lg object-cover bg-neutral-100 border border-neutral-200 shrink-0"
+              referrerPolicy="no-referrer"
+            />
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-neutral-800 truncate">{currentUser.nickname}</div>
+              <div className="text-[10px] text-neutral-400 truncate">@{currentUser.username}</div>
+            </div>
+          </div>
+          {onOpenProfile && (
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors shrink-0"
+              title="设置个人资料与密码"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Footer Profile / Version info */}
       <div className="p-3 border-t border-neutral-200 bg-white/70 text-[11px] text-neutral-500 flex items-center justify-between">

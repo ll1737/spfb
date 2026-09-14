@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   X, 
   Send, 
@@ -9,7 +9,10 @@ import {
   CheckCircle2,
   Calendar,
   Layers,
-  Sparkles
+  Sparkles,
+  Shield,
+  Filter,
+  Timer
 } from 'lucide-react';
 import { Account, ContentPayload, PlatformId } from '../types';
 import { PLATFORMS_META } from '../data/defaultData';
@@ -36,10 +39,24 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(
     accounts.filter((a) => a.status === 'active').map((a) => a.id)
   );
+  const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [publishMode, setPublishMode] = useState<'immediate' | 'scheduled'>('immediate');
   const [scheduledDateTime, setScheduledDateTime] = useState('');
+  const [enableStagger, setEnableStagger] = useState(true);
+  const [staggerMinutes, setStaggerMinutes] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Extract distinct account groups
+  const availableGroups = useMemo(() => {
+    const rawGroups = accounts.map((a) => a.group).filter(Boolean) as string[];
+    return ['all', ...Array.from(new Set(rawGroups))];
+  }, [accounts]);
+
+  const displayedAccounts = useMemo(() => {
+    if (selectedGroup === 'all') return accounts;
+    return accounts.filter((a) => a.group === selectedGroup);
+  }, [accounts, selectedGroup]);
 
   if (!isOpen) return null;
 
@@ -49,6 +66,13 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     } else {
       setSelectedAccountIds([...selectedAccountIds, id]);
     }
+  };
+
+  const handleSelectGroupOnly = (groupName: string) => {
+    const groupAccountIds = accounts
+      .filter((a) => (groupName === 'all' ? true : a.group === groupName) && a.status === 'active')
+      .map((a) => a.id);
+    setSelectedAccountIds(groupAccountIds);
   };
 
   const handleSelectAllActive = () => {
@@ -157,8 +181,45 @@ export const PublishModal: React.FC<PublishModalProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
-              {accounts.map((acc) => {
+            {/* Group Filter Tabs */}
+            {availableGroups.length > 1 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <span className="text-[11px] text-neutral-400 font-medium shrink-0 flex items-center gap-1">
+                  <Filter className="w-3 h-3" /> 矩阵分组：
+                </span>
+                {availableGroups.map((g) => {
+                  const label = g === 'all' ? '全部账号' : g;
+                  const isCur = selectedGroup === g;
+                  const count = g === 'all' ? accounts.length : accounts.filter((a) => a.group === g).length;
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setSelectedGroup(g)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 transition-all ${
+                        isCur
+                          ? 'bg-neutral-900 text-white'
+                          : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                      }`}
+                    >
+                      {label} ({count})
+                    </button>
+                  );
+                })}
+                {selectedGroup !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectGroupOnly(selectedGroup)}
+                    className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 ml-1 shrink-0"
+                  >
+                    + 仅勾选此组
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-52 overflow-y-auto pr-1">
+              {displayedAccounts.map((acc) => {
                 const meta = PLATFORMS_META[acc.platform];
                 const isSelected = selectedAccountIds.includes(acc.id);
                 const isActive = acc.status === 'active';
@@ -185,8 +246,13 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-semibold text-neutral-900 truncate">
-                          {acc.nickname}
+                        <div className="text-xs font-semibold text-neutral-900 truncate flex items-center gap-1.5">
+                          <span>{acc.nickname}</span>
+                          {acc.group && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-600 font-normal">
+                              {acc.group}
+                            </span>
+                          )}
                         </div>
                         <div className="text-[10px] text-neutral-500 flex items-center gap-1.5 mt-0.5">
                           <span>{meta.name}</span>
@@ -257,6 +323,68 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                   onChange={(e) => setScheduledDateTime(e.target.value)}
                   className="bg-white px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-mono text-neutral-800 focus:outline-none"
                 />
+              </div>
+            )}
+          </div>
+
+          {/* Anti-ban Staggered Strategy */}
+          <div className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/70 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-neutral-900 text-white flex items-center justify-center shrink-0">
+                  <Shield className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
+                    <span>矩阵防风控错峰调度 (Anti-ban Jitter)</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-semibold">推荐开启</span>
+                  </div>
+                  <div className="text-[11px] text-neutral-500">
+                    在多个账号发布之间引入动态随机延迟，模拟真人操作，规避同一 IP 瞬时群控风控
+                  </div>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={enableStagger}
+                  onChange={(e) => setEnableStagger(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-neutral-900"></div>
+              </label>
+            </div>
+
+            {enableStagger && (
+              <div className="pt-2 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-neutral-600 font-medium">防关联间隔：</span>
+                  {[
+                    { label: '快速 (1~2 分钟)', min: 1 },
+                    { label: '稳妥 (2~4 分钟)', min: 3 },
+                    { label: '深度防护 (5~8 分钟)', min: 5 }
+                  ].map((preset) => (
+                    <button
+                      key={preset.min}
+                      type="button"
+                      onClick={() => setStaggerMinutes(preset.min)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                        staggerMinutes === preset.min
+                          ? 'bg-neutral-900 text-white shadow-xs'
+                          : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-100'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-[11px] font-mono text-neutral-500 flex items-center gap-1.5">
+                  <Timer className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span>
+                    预计总耗时：约 {Math.max(1, (selectedAccountIds.length - 1) * staggerMinutes)} ~ {Math.max(2, (selectedAccountIds.length - 1) * (staggerMinutes + 2))} 分钟
+                  </span>
+                </div>
               </div>
             )}
           </div>
