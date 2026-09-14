@@ -1,0 +1,37 @@
+{
+  "appId": "com.multipublish.desk",
+  "productName": "Multi-Publish Desk",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "services/worker",
+      "to": "worker",
+      "filter": ["**/*", "!**/__pycache__/**", "!**/.pytest_cache/**"]
+    }
+  ],
+  "win": {
+    "target": ["nsis", "portable"],
+    "artifactName": "${productName}-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
+  },
+  "mac": {
+    "target": ["dmg", "zip"],
+    "category": "public.app-category.productivity"
+  },
+  "linux": {
+    "target": ["AppImage", "tar.gz"],
+    "category": "Office"
+  }
+}
