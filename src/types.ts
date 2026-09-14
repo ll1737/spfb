@@ -2,13 +2,44 @@ export type PlatformId =
   | 'douyin'
   | 'kuaishou'
   | 'xiaohongshu'
+  | 'channels'
+  | 'bilibili'
+  | 'baijiahao'
   | 'weibo'
   | 'toutiao'
   | 'wechat_mp'
   | 'zhihu'
-  | 'bilibili';
+  | 'tiktok'
+  | 'youtube';
 
 export type ContentType = 'article' | 'note' | 'video';
+
+export interface PlatformUploadOptions {
+  // Video Options
+  coverTimestamp?: number; // e.g. 1.5 seconds for video frame cover
+  // B站专属
+  bilibiliTid?: string; // 科技/生活/动画等分区
+  bilibiliCopyright?: 1 | 2; // 1: 原创, 2: 转载
+  bilibiliSource?: string; // 转载来源
+  bilibiliNoReprint?: boolean; // 禁止转载
+  // 微信视频号专属 (Tencent Channels)
+  channelsOriginal?: boolean; // 原创声明
+  channelsLinkTitle?: string; // 扩展链接文本
+  channelsLinkUrl?: string; // 扩展链接URL
+  channelsCollection?: string; // 活动或合集
+  // 抖音专属
+  douyinAllowSave?: boolean; // 允许下载保存
+  douyinAllowDuet?: boolean; // 允许合拍
+  douyinLocationPoi?: string; // 位置打卡 (POI)
+  // 快手专属
+  kuaishouPrivacy?: 'public' | 'friends' | 'private'; // 隐私级别
+  kuaishouOriginal?: boolean; // 原创声明
+  // 小红书专属
+  xhsNoteType?: 'normal' | 'video'; // 笔记类型
+  xhsAutoCoverText?: string; // 封面打字
+  // 百度百家号专属
+  baijiahaoOriginal?: boolean; // 原创声明
+}
 
 export interface PlatformMeta {
   id: PlatformId;
@@ -64,10 +95,12 @@ export interface ContentPayload {
   summary?: string;
   contentType: ContentType;
   coverUrl?: string;
+  coverTimestamp?: number; // social-auto-upload video frame timestamp (e.g. 1.5)
   images: string[];
   videoUrl?: string;
   tags: string[];
   sourceUrl?: string;
+  platformOptions?: PlatformUploadOptions;
   // Platform specific overrides
   overrides?: Partial<Record<PlatformId, {
     title?: string;
@@ -140,6 +173,10 @@ export interface SystemSettings {
   autoRetryFailed: boolean;
   maxRetries: number;
   saveDebugScreenshots: boolean;
+  enableStealth: boolean; // stealth.min.js anti-detection
+  usePatchright: boolean; // Patchright stealth engine
+  humanTypingDelay: boolean; // True user simulated delay
+  socialAutoUploadPath?: string; // social-auto-upload path or CLI bridge
   isDesktopMode?: boolean;
 }
 

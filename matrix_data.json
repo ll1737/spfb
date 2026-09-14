@@ -13,10 +13,290 @@
       "phone": "13800138000",
       "bio": "系统默认预置管理员，拥有全平台发布与矩阵账号最高管理权限。",
       "createdAt": "2026-09-14T04:00:00.000Z",
-      "lastLoginAt": "2026-09-14T04:10:51.479Z"
+      "lastLoginAt": "2026-09-14T04:49:35.309Z"
     }
   ],
-  "accounts": [],
-  "jobs": [],
-  "tasks": []
+  "accounts": [
+    {
+      "id": "acc_zhihu_1789361408964",
+      "platform": "zhihu",
+      "nickname": "知乎主账号_9173",
+      "name": "知乎主账号_9173",
+      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E7%9F%A5%E4%B9%8E%E4%B8%BB%E8%B4%A6%E5%8F%B7_9173",
+      "status": "active",
+      "encryptedSession": "1259ceb8afdbbea313053085:c1497570443b5ff8169f066a597e6b02:d25e23edae4503451cbd07c6d922a877e7ec8583a1d8886af9497c6f571a2b7dfaad6e861a97a9ee9003fb5d1e9da3132252c8d98804e69606c6d8f94236356485ccf04243ff009dbed77e9e9317886bd66e0c1933abe5e037d25f47648f3bc0410bbcccf0c8fd819d975e0ba7cfde0e38168138ed2902cc045181",
+      "sessionPreview": "storageState_enc:***ddfb (已由 AES-256 加密)",
+      "lastVerifiedAt": "2026-09-14T04:50:08.965Z",
+      "createdAt": "2026-09-14T04:50:08.965Z",
+      "followersCount": 1791,
+      "stats": {
+        "publishedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "id": "acc_douyin_1789361300829",
+      "platform": "douyin",
+      "nickname": "抖音美食官号",
+      "name": "抖音美食官号",
+      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E6%8A%96%E9%9F%B3%E7%BE%8E%E9%A3%9F%E5%AE%98%E5%8F%B7",
+      "status": "active",
+      "encryptedSession": "a4dfec65600101fc4f12e4f4:da355b74e729e32046313d3ba6c852cc:4adbdd975a53aab384626cf1b3d55d99daf0204e76400c6f922aa7df48430c3e107ed1774bb44e2c1680ff7b06bcbad487f6f01a017a47f8ca0d22d5017c4cba89ee281bc9ffe81ef13305a7c7871701251dadbec89b0b3b6e7803810190cc833e93a48b220067581337cba3cc28a5c0",
+      "sessionPreview": "storageState_enc:***a0ae (已由 AES-256 加密)",
+      "lastVerifiedAt": "2026-09-14T04:48:20.830Z",
+      "createdAt": "2026-09-14T04:48:20.830Z",
+      "followersCount": 7967,
+      "stats": {
+        "publishedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "id": "acc_channels_1789361077125",
+      "platform": "channels",
+      "nickname": "微信视频号主号",
+      "name": "微信视频号主号",
+      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%91%E5%8F%B7%E4%B8%BB%E5%8F%B7",
+      "status": "active",
+      "encryptedSession": "222ca98bc26851cc4f0998e6:92b6b3881e742903018b798999e1013c:f275c7eb081295385b5db666e35c01a618297f971397126ddf6a1ec5003eb7ec57eabd6d31cb6920c87424db773a67bf34c58e3632c2e93e7db8ecbd655a4073619a1de00c7b0de92bf43a69ddf2391f985da20a338e5254d91f2d0a2f3a540d2567a077caf432979ff086090dfde29afcc464d149",
+      "sessionPreview": "storageState_enc:***25e6 (已由 AES-256 加密)",
+      "lastVerifiedAt": "2026-09-14T04:44:37.126Z",
+      "createdAt": "2026-09-14T04:44:37.126Z",
+      "followersCount": 1728,
+      "stats": {
+        "publishedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "id": "acc_douyin_1789360927545",
+      "platform": "douyin",
+      "nickname": "测试抖音账号",
+      "name": "测试抖音账号",
+      "group": "测试组",
+      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E6%B5%8B%E8%AF%95%E6%8A%96%E9%9F%B3%E8%B4%A6%E5%8F%B7",
+      "status": "active",
+      "encryptedSession": "a32153a25369ca03e92fd735:fbf3c3c2fb5addaf8ad06efc6a973873:a434ad8c8ea1a9b9c72ae9c29fc69a5f023d57500f1e9c3d3b1aa94ed3b3423d2796641ed90ea80c3398a87f3d35d6b53378d45e35acc0ab25196fb12bd6a48a25a28f493e398a3a3cb9ca775e2d74c7ee8ebcf0cff8",
+      "sessionPreview": "storageState_enc:***7368 (已由 AES-256 加密)",
+      "lastVerifiedAt": "2026-09-14T04:42:07.546Z",
+      "createdAt": "2026-09-14T04:42:07.546Z",
+      "followersCount": 0,
+      "stats": {
+        "publishedCount": 0,
+        "failedCount": 0
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "id": "job_1789361663671",
+      "title": "多平台内容分发_9/14/2026",
+      "contentType": "video",
+      "status": "running",
+      "createdAt": "2026-09-14T04:54:23.672Z",
+      "payload": {
+        "title": "多平台内容分发_9/14/2026",
+        "content": "自动化分发测试正文",
+        "contentType": "video",
+        "tags": [
+          "科技"
+        ],
+        "images": []
+      },
+      "taskIds": [
+        "task_1789361663672_zhihu_h36lzl",
+        "task_1789361663672_douyin_a1a8xr",
+        "task_1789361663672_channels_omtp4r",
+        "task_1789361663672_douyin_l3rn3"
+      ],
+      "tasks": [
+        {
+          "id": "task_1789361663672_zhihu_h36lzl",
+          "jobId": "job_1789361663671",
+          "platform": "zhihu",
+          "accountId": "acc_zhihu_1789361408964",
+          "accountNickname": "知乎主账号_9173",
+          "contentType": "video",
+          "status": "running",
+          "startedAt": "2026-09-14T04:54:23.672Z",
+          "attempt": 1,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T04:54:23.672Z",
+              "level": "info",
+              "message": "创建任务：针对【知乎主账号_9173】的 zhihu 发布"
+            }
+          ]
+        },
+        {
+          "id": "task_1789361663672_douyin_a1a8xr",
+          "jobId": "job_1789361663671",
+          "platform": "douyin",
+          "accountId": "acc_douyin_1789361300829",
+          "accountNickname": "抖音美食官号",
+          "contentType": "video",
+          "status": "running",
+          "startedAt": "2026-09-14T04:54:23.672Z",
+          "attempt": 1,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T04:54:23.672Z",
+              "level": "info",
+              "message": "创建任务：针对【抖音美食官号】的 douyin 发布"
+            }
+          ]
+        },
+        {
+          "id": "task_1789361663672_channels_omtp4r",
+          "jobId": "job_1789361663671",
+          "platform": "channels",
+          "accountId": "acc_channels_1789361077125",
+          "accountNickname": "微信视频号主号",
+          "contentType": "video",
+          "status": "running",
+          "startedAt": "2026-09-14T04:54:23.672Z",
+          "attempt": 1,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T04:54:23.672Z",
+              "level": "info",
+              "message": "创建任务：针对【微信视频号主号】的 channels 发布"
+            }
+          ]
+        },
+        {
+          "id": "task_1789361663672_douyin_l3rn3",
+          "jobId": "job_1789361663671",
+          "platform": "douyin",
+          "accountId": "acc_douyin_1789360927545",
+          "accountNickname": "测试抖音账号",
+          "contentType": "video",
+          "status": "running",
+          "startedAt": "2026-09-14T04:54:23.672Z",
+          "attempt": 1,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T04:54:23.672Z",
+              "level": "info",
+              "message": "创建任务：针对【测试抖音账号】的 douyin 发布"
+            }
+          ]
+        }
+      ],
+      "stats": {
+        "total": 4,
+        "success": 0,
+        "failed": 0,
+        "running": 4,
+        "queued": 0
+      }
+    },
+    {
+      "id": "job_1789361494174",
+      "title": "测试标题",
+      "contentType": "video",
+      "status": "running",
+      "createdAt": "2026-09-14T04:51:34.174Z",
+      "payload": {
+        "title": "测试标题",
+        "content": "测试内容",
+        "contentType": "video",
+        "tags": [
+          "测试"
+        ],
+        "images": []
+      },
+      "taskIds": [],
+      "tasks": [],
+      "stats": {
+        "total": 0,
+        "success": 0,
+        "failed": 0,
+        "running": 0,
+        "queued": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_1789361663672_zhihu_h36lzl",
+      "jobId": "job_1789361663671",
+      "platform": "zhihu",
+      "accountId": "acc_zhihu_1789361408964",
+      "accountNickname": "知乎主账号_9173",
+      "contentType": "video",
+      "status": "running",
+      "startedAt": "2026-09-14T04:54:23.672Z",
+      "attempt": 1,
+      "maxAttempts": 3,
+      "logs": [
+        {
+          "timestamp": "2026-09-14T04:54:23.672Z",
+          "level": "info",
+          "message": "创建任务：针对【知乎主账号_9173】的 zhihu 发布"
+        }
+      ]
+    },
+    {
+      "id": "task_1789361663672_douyin_a1a8xr",
+      "jobId": "job_1789361663671",
+      "platform": "douyin",
+      "accountId": "acc_douyin_1789361300829",
+      "accountNickname": "抖音美食官号",
+      "contentType": "video",
+      "status": "running",
+      "startedAt": "2026-09-14T04:54:23.672Z",
+      "attempt": 1,
+      "maxAttempts": 3,
+      "logs": [
+        {
+          "timestamp": "2026-09-14T04:54:23.672Z",
+          "level": "info",
+          "message": "创建任务：针对【抖音美食官号】的 douyin 发布"
+        }
+      ]
+    },
+    {
+      "id": "task_1789361663672_channels_omtp4r",
+      "jobId": "job_1789361663671",
+      "platform": "channels",
+      "accountId": "acc_channels_1789361077125",
+      "accountNickname": "微信视频号主号",
+      "contentType": "video",
+      "status": "running",
+      "startedAt": "2026-09-14T04:54:23.672Z",
+      "attempt": 1,
+      "maxAttempts": 3,
+      "logs": [
+        {
+          "timestamp": "2026-09-14T04:54:23.672Z",
+          "level": "info",
+          "message": "创建任务：针对【微信视频号主号】的 channels 发布"
+        }
+      ]
+    },
+    {
+      "id": "task_1789361663672_douyin_l3rn3",
+      "jobId": "job_1789361663671",
+      "platform": "douyin",
+      "accountId": "acc_douyin_1789360927545",
+      "accountNickname": "测试抖音账号",
+      "contentType": "video",
+      "status": "running",
+      "startedAt": "2026-09-14T04:54:23.672Z",
+      "attempt": 1,
+      "maxAttempts": 3,
+      "logs": [
+        {
+          "timestamp": "2026-09-14T04:54:23.672Z",
+          "level": "info",
+          "message": "创建任务：针对【测试抖音账号】的 douyin 发布"
+        }
+      ]
+    }
+  ]
 }

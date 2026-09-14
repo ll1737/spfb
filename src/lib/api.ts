@@ -175,9 +175,27 @@ export const api = {
     return handleResponse(res);
   },
 
-  async deleteAccount(id: string): Promise<{ success: boolean }> {
+  async updateAccount(id: string, data: Partial<Account> & { cookieData?: string }): Promise<{ success: boolean; account: Account }> {
+    const res = await authFetch(`${BASE_URL}/accounts/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async deleteAccount(id: string): Promise<{ success: boolean; message?: string }> {
     const res = await authFetch(`${BASE_URL}/accounts/${id}`, {
       method: 'DELETE'
+    });
+    return handleResponse(res);
+  },
+
+  async batchDeleteAccounts(ids: string[]): Promise<{ success: boolean; deletedCount: number; remainingCount: number }> {
+    const res = await authFetch(`${BASE_URL}/accounts/batch-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
     });
     return handleResponse(res);
   },
@@ -203,11 +221,18 @@ export const api = {
     return handleResponse(res);
   },
 
-  async confirmLoginSession(sessionId: string, nickname?: string, group?: string): Promise<LoginSessionResponse & { account?: Account }> {
+  async confirmLoginSession(
+    sessionId: string,
+    nickname?: string,
+    group?: string,
+    platform?: string,
+    cookieData?: any,
+    isTestSimulated?: boolean
+  ): Promise<LoginSessionResponse & { account?: Account; message?: string; success?: boolean }> {
     const res = await authFetch(`${BASE_URL}/accounts/login-session/${sessionId}/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nickname, group })
+      body: JSON.stringify({ nickname, group, platform, cookieData, isTestSimulated })
     });
     return handleResponse(res);
   },
@@ -290,6 +315,49 @@ export const api = {
       body: JSON.stringify({ url })
     });
     return handleResponse(res);
+  },
+
+  // dreammis/social-auto-upload integration
+  async generateCliCommand(params: {
+    platform: string;
+    accountName?: string;
+    title?: string;
+    content?: string;
+    videoPath?: string;
+    coverTimestamp?: number;
+    tags?: string[];
+    scheduleTime?: string;
+    customOptions?: Record<string, any>;
+  }): Promise<{ platform: string; command: string; dockerCommand: string; explanation: string }> {
+    const res = await authFetch(`${BASE_URL}/social-upload/cli-command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    return handleResponse(res);
+  },
+
+  async importSocialCookie(params: {
+    fileName?: string;
+    content: string | object;
+    customPlatform?: string;
+    customNickname?: string;
+    group?: string;
+  }): Promise<{ success: boolean; message: string; account: Account }> {
+    const res = await authFetch(`${BASE_URL}/social-upload/import-cookie`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    return handleResponse(res);
+  },
+
+  getExportSocialCookieUrl(accountId: string): string {
+    return `${BASE_URL}/social-upload/export-cookie/${accountId}`;
+  },
+
+  getWorkerScriptDownloadUrl(): string {
+    return `${BASE_URL}/social-upload/worker-script`;
   }
 };
 

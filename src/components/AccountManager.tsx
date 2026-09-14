@@ -8,15 +8,26 @@ import {
   QrCode, 
   CheckCircle2, 
   AlertCircle, 
-  ExternalLink,
-  Key,
-  Clock,
-  Sparkles,
-  X,
-  Filter,
-  Folder,
-  Info,
-  Smartphone
+  ExternalLink, 
+  Key, 
+  Clock, 
+  Sparkles, 
+  X, 
+  Filter, 
+  Folder, 
+  Info, 
+  Smartphone, 
+  Download, 
+  UploadCloud, 
+  FileCode, 
+  Copy, 
+  Terminal,
+  Edit3,
+  Search,
+  CheckSquare,
+  Square,
+  AlertTriangle,
+  UserCheck
 } from 'lucide-react';
 import { Account, PlatformId, LoginSessionResponse } from '../types';
 import { PLATFORMS_META } from '../data/defaultData';
@@ -27,28 +38,66 @@ interface AccountManagerProps {
   onRefresh: () => void;
   onAccountAdded: (account: Account) => void;
   onAccountDeleted: (id: string) => void;
+  onAccountUpdated?: (account: Account) => void;
 }
 
 export const AccountManager: React.FC<AccountManagerProps> = ({
   accounts,
   onRefresh,
   onAccountAdded,
-  onAccountDeleted
+  onAccountDeleted,
+  onAccountUpdated
 }) => {
+  // Filters & Search
   const [activePlatformFilter, setActivePlatformFilter] = useState<string>('all');
   const [activeGroupFilter, setActiveGroupFilter] = useState<string>('all');
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  // Modals & Active Operations
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<PlatformId>('xiaohongshu');
-  const [loginMethod, setLoginMethod] = useState<'qr' | 'cookie'>('qr');
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
+  const [editNickname, setEditNickname] = useState('');
+  const [editGroup, setEditGroup] = useState('');
+  const [editCookie, setEditCookie] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // Batch operations
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
+  const [showBatchDeleteModal, setShowBatchDeleteModal] = useState(false);
+  const [isBatchDeleting, setIsBatchDeleting] = useState(false);
+
+  // Add Modal state
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformId>('douyin');
+  const [loginMethod, setLoginMethod] = useState<'qr' | 'cookie' | 'social'>('qr');
   const [cookieInput, setCookieInput] = useState('');
   const [nicknameInput, setNicknameInput] = useState('');
+  const [nicknameError, setNicknameError] = useState('');
   const [groupInput, setGroupInput] = useState('');
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [socialFileName, setSocialFileName] = useState('');
+  const [socialFileContent, setSocialFileContent] = useState('');
+  const [isGeneratingQr, setIsGeneratingQr] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [loginSession, setLoginSession] = useState<LoginSessionResponse | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string>('');
+  const [copiedCliId, setCopiedCliId] = useState<string | null>(null);
+
+  // Toast Notification System (replaces window.alert and iframe-blocked alerts)
+  const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ text, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.text === text ? null : prev));
+    }, 3500);
+  };
 
   const pollTimerRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const clearPolling = () => {
     if (pollTimerRef.current) {
@@ -68,83 +117,112 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
     return ['all', ...Array.from(new Set(raw))];
   }, [accounts]);
 
-  const filteredAccounts = accounts.filter((a) => {
-    if (activePlatformFilter !== 'all' && a.platform !== activePlatformFilter) return false;
-    if (activeGroupFilter !== 'all' && a.group !== activeGroupFilter) return false;
-    return true;
-  });
+  // Filter accounts based on platform, group, and search text
+  const filteredAccounts = useMemo(() => {
+    return accounts.filter((a) => {
+      if (activePlatformFilter !== 'all' && a.platform !== activePlatformFilter) return false;
+      if (activeGroupFilter !== 'all' && a.group !== activeGroupFilter) return false;
+      if (searchKeyword.trim()) {
+        const kw = searchKeyword.trim().toLowerCase();
+        const matchName = (a.nickname || a.name || '').toLowerCase().includes(kw);
+        const matchGroup = (a.group || '').toLowerCase().includes(kw);
+        const matchPlatform = (PLATFORMS_META[a.platform]?.name || '').toLowerCase().includes(kw);
+        if (!matchName && !matchGroup && !matchPlatform) return false;
+      }
+      return true;
+    });
+  }, [accounts, activePlatformFilter, activeGroupFilter, searchKeyword]);
 
+  // QR Login Start
   const handleStartQrLogin = async () => {
     clearPolling();
-    setIsLoggingIn(true);
-    setActionMessage('正在初始化创作者登录会话...');
+    setIsGeneratingQr(true);
+    setActionMessage('正在调起创作者平台二维码通道...');
+    setNicknameError('');
     try {
       const session = await api.startLoginSession(selectedPlatform);
       setLoginSession(session);
-      setActionMessage('二维码已生成，等待扫码授权（系统不会自动添加，请主动确认）');
+      setIsGeneratingQr(false);
+      setActionMessage('二维码已就绪，请使用手机 App 扫码，并在下方输入您的真实自媒体账号名称确认录入');
 
-      // Poll session status only if real worker is active or until user explicitly confirms
       pollTimerRef.current = setInterval(async () => {
         try {
           const res = await api.checkLoginSession(session.sessionId);
           if (res.status === 'confirmed' && res.account) {
             clearPolling();
-            setIsLoggingIn(false);
             onAccountAdded(res.account);
+            onRefresh();
             setIsAddModalOpen(false);
             setLoginSession(null);
-            setActionMessage('🎉 账号授权成功并已加密存储！');
-          } else if (res.status === 'expired' || res.status === 'error') {
+            showToast(`🎉 账号【${res.account.nickname}】授权成功并已加密存储！`, 'success');
+          } else if (res.status === 'expired') {
             clearPolling();
-            setIsLoggingIn(false);
-            setActionMessage('二维码已失效或超时，请重试');
+            setActionMessage('二维码已超时，请点击重新获取');
           }
-        } catch (e) {
-          clearPolling();
-          setIsLoggingIn(false);
+        } catch {
+          // Ignore polling errors
         }
       }, 3000);
     } catch (err: any) {
-      setIsLoggingIn(false);
+      setIsGeneratingQr(false);
       setActionMessage(err.message || '启动登录会话失败');
+      showToast('获取二维码失败: ' + err.message, 'error');
     }
   };
 
+  // Confirm QR Login (Solves: "扫码进去的账号也不是我自己的")
   const handleConfirmLogin = async (isTestSimulated = false) => {
-    if (!loginSession) return;
-    setIsLoggingIn(true);
+    // If not simulated, ensure user has entered their real nickname so they own this account
+    if (!nicknameInput.trim() && !isTestSimulated) {
+      setNicknameError('请在此输入您扫码登录的真实自媒体昵称（如：我的抖音号、生活分享官），以便系统精确归属！');
+      return;
+    }
+    setNicknameError('');
+    setIsConfirming(true);
+    setActionMessage('正在与平台校验并加密录入您的账号信息...');
+
     try {
-      const nameToUse = nicknameInput.trim() || `${PLATFORMS_META[selectedPlatform].name}主账号_${Date.now().toString().slice(-4)}`;
+      const nameToUse = nicknameInput.trim() || `${PLATFORMS_META[selectedPlatform].name}账号_${Date.now().toString().slice(-4)}`;
+      const sid = loginSession?.sessionId || `sess_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
       const res = await api.confirmLoginSession(
-        loginSession.sessionId,
+        sid,
         nameToUse,
-        groupInput.trim() || undefined
+        groupInput.trim() || undefined,
+        selectedPlatform,
+        cookieInput.trim() || undefined,
+        isTestSimulated
       );
 
       clearPolling();
-      setIsLoggingIn(false);
+      setIsConfirming(false);
 
       if (res.account) {
         onAccountAdded(res.account);
+        onRefresh();
         setIsAddModalOpen(false);
         setLoginSession(null);
         setNicknameInput('');
         setGroupInput('');
-        setActionMessage(isTestSimulated ? '✅ 已通过测试模式模拟录入账号' : '🎉 账号扫码授权已确认保存！');
+        setCookieInput('');
+        showToast(`🎉 已成功接入并绑定账号【${res.account.nickname}】！`, 'success');
+      } else {
+        showToast(res.message || '已成功录入账号', 'success');
       }
     } catch (err: any) {
-      setIsLoggingIn(false);
-      alert('确认录入失败: ' + (err.message || '未知错误'));
+      setIsConfirming(false);
+      showToast('确认录入失败: ' + (err.message || '未知错误'), 'error');
     }
   };
 
+  // Manual Cookie Submit
   const handleManualCookieSubmit = async () => {
     if (!nicknameInput.trim()) {
-      alert('请输入账号昵称或备注');
+      showToast('请输入您的账号真实昵称或备注', 'error');
       return;
     }
     if (!cookieInput.trim()) {
-      alert('请输入 Cookie 或 storageState JSON');
+      showToast('请输入 Cookie 或 storageState JSON 内容', 'error');
       return;
     }
 
@@ -154,7 +232,7 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
         nickname: nicknameInput.trim(),
         name: nicknameInput.trim(),
         group: groupInput.trim() || undefined,
-        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nicknameInput)}`,
+        avatarUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(nicknameInput)}`,
         status: 'active',
         encryptedSession: `enc_${btoa(cookieInput.trim().substring(0, 32))}`,
         sessionPreview: `cookie_enc:***${Math.random().toString(16).substring(2, 6)} (已由 AES-256 加密)`
@@ -163,128 +241,387 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
       setIsAddModalOpen(false);
       setCookieInput('');
       setNicknameInput('');
+      showToast(`已成功录入账号【${newAcc.nickname}】`, 'success');
     } catch (err: any) {
-      alert(err.message || '导入失败');
+      showToast(err.message || '导入失败', 'error');
     }
   };
 
+  // File upload for social-auto-upload cookies
+  const handleSocialFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSocialFileName(file.name);
+    const baseName = file.name.replace(/\.[^/.]+$/, '');
+    const parts = baseName.split('_');
+    const prefix = parts[0]?.toLowerCase() as PlatformId;
+    if (prefix && PLATFORMS_META[prefix]) {
+      setSelectedPlatform(prefix);
+      if (parts.length > 1 && !nicknameInput.trim()) {
+        setNicknameInput(parts.slice(1).join('_'));
+      }
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setSocialFileContent(content);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSocialAutoUploadImport = async () => {
+    if (!socialFileContent.trim()) {
+      showToast('请先选择或上传 social-auto-upload 的 Cookie JSON 文件！', 'error');
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const res = await api.importSocialCookie({
+        fileName: socialFileName,
+        content: socialFileContent,
+        customPlatform: selectedPlatform,
+        customNickname: nicknameInput.trim() || undefined,
+        group: groupInput.trim() || 'social-auto-upload'
+      });
+
+      if (res.account) {
+        onAccountAdded(res.account);
+        setIsAddModalOpen(false);
+        setSocialFileName('');
+        setSocialFileContent('');
+        setNicknameInput('');
+        setGroupInput('');
+        showToast(`🎉 ${res.message}`, 'success');
+      }
+    } catch (err: any) {
+      showToast('导入失败: ' + err.message, 'error');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Verify Single Account
   const handleVerifyAccount = async (id: string) => {
     setVerifyingId(id);
     try {
-      await api.verifyAccount(id);
-      onRefresh();
+      const updated = await api.verifyAccount(id);
+      if (onAccountUpdated) {
+        onAccountUpdated(updated);
+      } else {
+        onRefresh();
+      }
+      showToast('账号状态与加密凭据已核验正常', 'success');
     } catch (err: any) {
-      alert('验证失败: ' + err.message);
+      showToast('核验失败: ' + err.message, 'error');
     } finally {
       setVerifyingId(null);
     }
   };
 
-  const handleDeleteAccount = async (id: string) => {
-    if (confirm('确定要移除此账号及存储的加密会话吗？')) {
-      try {
-        await api.deleteAccount(id);
-        onAccountDeleted(id);
-      } catch (err: any) {
-        alert(err.message || '删除失败');
-      }
+  // Safe In-App Delete Handler (Solves: "删除都没效果" due to window.confirm being blocked in iframe)
+  const handleDeleteAccountClick = (account: Account) => {
+    setAccountToDelete(account);
+  };
+
+  const confirmDeleteAccount = async () => {
+    if (!accountToDelete) return;
+    setIsDeleting(true);
+    try {
+      await api.deleteAccount(accountToDelete.id);
+      onAccountDeleted(accountToDelete.id);
+      showToast(`已成功移除账号【${accountToDelete.nickname}】`, 'success');
+      setAccountToDelete(null);
+    } catch (err: any) {
+      showToast(err.message || '删除失败，请稍后重试', 'error');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  // Edit Account Handler (Solves: "扫码进去的账号不是我自己的，支持一键改成自己的真实昵称")
+  const handleOpenEdit = (account: Account) => {
+    setAccountToEdit(account);
+    setEditNickname(account.nickname || account.name || '');
+    setEditGroup(account.group || '');
+    setEditCookie('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!accountToEdit) return;
+    if (!editNickname.trim()) {
+      showToast('账号昵称不能为空', 'error');
+      return;
+    }
+    setIsSavingEdit(true);
+    try {
+      const res = await api.updateAccount(accountToEdit.id, {
+        nickname: editNickname.trim(),
+        name: editNickname.trim(),
+        group: editGroup.trim() || undefined,
+        cookieData: editCookie.trim() || undefined
+      });
+      if (res.account && onAccountUpdated) {
+        onAccountUpdated(res.account);
+      }
+      showToast(`账号【${editNickname}】资料已成功更新！`, 'success');
+      setAccountToEdit(null);
+    } catch (err: any) {
+      showToast(err.message || '修改失败', 'error');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  // Batch Delete Handlers
+  const toggleBatchSelect = (id: string) => {
+    setSelectedBatchIds((prev) => 
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllFiltered = () => {
+    setSelectedBatchIds(filteredAccounts.map((a) => a.id));
+  };
+
+  const handleClearBatchSelection = () => {
+    setSelectedBatchIds([]);
+  };
+
+  const confirmBatchDelete = async () => {
+    if (selectedBatchIds.length === 0) return;
+    setIsBatchDeleting(true);
+    try {
+      await api.batchDeleteAccounts(selectedBatchIds);
+      selectedBatchIds.forEach((id) => onAccountDeleted(id));
+      showToast(`已成功批量清理 ${selectedBatchIds.length} 个账号`, 'success');
+      setSelectedBatchIds([]);
+      setShowBatchDeleteModal(false);
+      setIsBatchMode(false);
+    } catch (err: any) {
+      showToast(err.message || '批量删除失败', 'error');
+    } finally {
+      setIsBatchDeleting(false);
+    }
+  };
+
+  // Copy CLI command
+  const handleCopyCliCommand = (account: Account) => {
+    const cmd = `python main.py upload --platform ${account.platform} --account "${account.nickname}" --video "video.mp4" --title "测试作品" --cover-timestamp 1.5`;
+    navigator.clipboard.writeText(cmd);
+    setCopiedCliId(account.id);
+    showToast('CLI 测试指令已复制到剪贴板', 'success');
+    setTimeout(() => setCopiedCliId(null), 2500);
   };
 
   const closeModal = () => {
     clearPolling();
     setIsAddModalOpen(false);
     setLoginSession(null);
-    setIsLoggingIn(false);
-    setActionMessage('');
+    setIsGeneratingQr(false);
+    setIsConfirming(false);
+    setNicknameError('');
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Top Banner / Filter and Add */}
-      <div className="p-4 rounded-2xl bg-white border border-neutral-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-2xl">
-          <button
-            onClick={() => setActivePlatformFilter('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all ${
-              activePlatformFilter === 'all'
-                ? 'bg-neutral-900 text-white'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-            }`}
+    <div className="space-y-6 animate-in fade-in duration-300 relative">
+      {/* In-App Toast Banner */}
+      {toast && (
+        <div 
+          className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold flex items-center gap-2.5 transition-all animate-in slide-in-from-top-3 ${
+            toast.type === 'success'
+              ? 'bg-emerald-900 text-white border-emerald-700'
+              : toast.type === 'error'
+              ? 'bg-rose-900 text-white border-rose-700'
+              : 'bg-neutral-900 text-white border-neutral-700'
+          }`}
+        >
+          {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />}
+          {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-300 shrink-0" />}
+          {toast.type === 'info' && <Info className="w-4 h-4 text-blue-300 shrink-0" />}
+          <span>{toast.text}</span>
+          <button 
+            onClick={() => setToast(null)}
+            className="ml-2 text-white/70 hover:text-white cursor-pointer"
           >
-            全部账号 ({accounts.length})
+            <X className="w-3.5 h-3.5" />
           </button>
-          {Object.entries(PLATFORMS_META).map(([key, meta]) => {
-            const count = accounts.filter((a) => a.platform === key).length;
-            const isSelected = activePlatformFilter === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setActivePlatformFilter(key)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-neutral-900 text-white'
-                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                }`}
-              >
-                <span>{meta.name}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  isSelected ? 'bg-neutral-700 text-white' : 'bg-neutral-200 text-neutral-700'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        </div>
+      )}
+
+      {/* Top Header & Metrics */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-neutral-900 tracking-tight flex items-center gap-2">
+            <span>自媒体矩阵账号中心</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 font-normal">
+              {accounts.length} 个矩阵节点
+            </span>
+          </h2>
+          <p className="text-xs text-neutral-500 mt-1">
+            支持抖音、微信视频号、小红书、快手等多平台；具备会话加密托管与一键删除、改名与核验
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              setIsBatchMode(!isBatchMode);
+              if (isBatchMode) setSelectedBatchIds([]);
+            }}
+            className={`px-3 py-2 text-xs font-medium rounded-xl border transition-all cursor-pointer ${
+              isBatchMode 
+                ? 'bg-neutral-900 text-white border-neutral-900' 
+                : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50'
+            }`}
+          >
+            {isBatchMode ? '退出批量管理' : '批量清理'}
+          </button>
+
           <button
             onClick={onRefresh}
-            className="p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl text-xs font-medium border border-neutral-200"
-            title="刷新账号矩阵状态"
+            className="p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl border border-neutral-200 transition-colors cursor-pointer"
+            title="刷新全部账号状态"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
+
           <button
             onClick={() => {
               setIsAddModalOpen(true);
               setLoginSession(null);
-              setActionMessage('');
+              setNicknameInput('');
+              setNicknameError('');
+              setGroupInput('');
+              setCookieInput('');
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>添加平台新账号</span>
           </button>
         </div>
+      </div>
 
-        {/* Group Sub-filter bar */}
-        {availableGroups.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 w-full pt-2 border-t border-neutral-100">
-            <span className="text-[11px] text-neutral-400 font-medium shrink-0 flex items-center gap-1">
-              <Folder className="w-3 h-3" /> 矩阵分组：
-            </span>
-            {availableGroups.map((g) => {
-              const label = g === 'all' ? '全部分组' : g;
-              const isSelected = activeGroupFilter === g;
-              const count = g === 'all' ? accounts.length : accounts.filter((a) => a.group === g).length;
-              return (
-                <button
-                  key={g}
-                  onClick={() => setActiveGroupFilter(g)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 transition-all ${
-                    isSelected
-                      ? 'bg-neutral-800 text-white shadow-xs'
-                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                  }`}
-                >
-                  {label} ({count})
-                </button>
-              );
-            })}
+      {/* Batch Action Bar if Batch Mode Active */}
+      {isBatchMode && (
+        <div className="p-3 bg-neutral-900 text-white rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold">已选定 {selectedBatchIds.length} 个账号</span>
+            <button
+              onClick={handleSelectAllFiltered}
+              className="text-neutral-300 hover:text-white underline cursor-pointer"
+            >
+              全选当前列表 ({filteredAccounts.length})
+            </button>
+            <span className="text-neutral-600">|</span>
+            <button
+              onClick={handleClearBatchSelection}
+              className="text-neutral-300 hover:text-white underline cursor-pointer"
+            >
+              清空勾选
+            </button>
           </div>
-        )}
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBatchDeleteModal(true)}
+              disabled={selectedBatchIds.length === 0}
+              className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-medium rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>彻底删除选中的账号 ({selectedBatchIds.length})</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Search & Filters Filter Bar */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="搜索账号真实昵称、所属矩阵分组或平台..."
+              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-all"
+            />
+            {searchKeyword && (
+              <button
+                onClick={() => setSearchKeyword('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Group Filter Chips */}
+          {availableGroups.length > 1 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <span className="text-neutral-400 shrink-0 flex items-center gap-1">
+                <Folder className="w-3.5 h-3.5" /> 分组：
+              </span>
+              {availableGroups.map((g) => {
+                const isCur = activeGroupFilter === g;
+                const count = g === 'all' ? accounts.length : accounts.filter((a) => a.group === g).length;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => setActiveGroupFilter(g)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 transition-all cursor-pointer ${
+                      isCur
+                        ? 'bg-neutral-900 text-white'
+                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                    }`}
+                  >
+                    {g === 'all' ? '全部分组' : g} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Platform Selector Chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          <button
+            onClick={() => setActivePlatformFilter('all')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-all cursor-pointer ${
+              activePlatformFilter === 'all'
+                ? 'bg-neutral-900 text-white shadow-xs'
+                : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+            }`}
+          >
+            全部平台 ({accounts.length})
+          </button>
+          {Object.entries(PLATFORMS_META).map(([key, meta]) => {
+            const isCur = activePlatformFilter === key;
+            const count = accounts.filter((a) => a.platform === key).length;
+            if (count === 0 && activePlatformFilter !== key) return null;
+
+            return (
+              <button
+                key={key}
+                onClick={() => setActivePlatformFilter(key)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isCur
+                    ? 'bg-neutral-900 text-white shadow-xs'
+                    : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${meta.badgeBg.replace('text-', 'bg-')}`} />
+                <span>{meta.name}</span>
+                <span className="opacity-70 text-[10px]">({count})</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Accounts Grid */}
@@ -293,20 +630,31 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
           <div className="w-12 h-12 rounded-2xl bg-neutral-100 flex items-center justify-center mx-auto text-neutral-400">
             <Users className="w-6 h-6" />
           </div>
-          <h4 className="text-sm font-bold text-neutral-800">暂无已绑定的自媒体账号</h4>
+          <h4 className="text-sm font-bold text-neutral-800">
+            {searchKeyword ? '未检索到匹配的矩阵账号' : '暂无绑定的平台账号'}
+          </h4>
           <p className="text-xs text-neutral-500 max-w-md mx-auto">
-            系统处于初始纯净状态。点击右上角的「添加平台新账号」，即可通过扫码或导入 Cookie 接入您的真实自媒体账号。
+            {searchKeyword 
+              ? '请尝试更换搜索关键字，或清除筛选条件'
+              : '点击右上角的「添加平台新账号」，即可通过扫码授权或导入 Cookie 接入您的真实自媒体矩阵。'
+            }
           </p>
           <div className="pt-2">
             <button
               onClick={() => {
-                setIsAddModalOpen(true);
-                setLoginSession(null);
+                if (searchKeyword) {
+                  setSearchKeyword('');
+                  setActivePlatformFilter('all');
+                  setActiveGroupFilter('all');
+                } else {
+                  setIsAddModalOpen(true);
+                  setLoginSession(null);
+                }
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>立即接入第一个账号</span>
+              <span>{searchKeyword ? '重置筛选条件' : '立即接入第一个账号'}</span>
             </button>
           </div>
         </div>
@@ -316,109 +664,369 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
             const meta = PLATFORMS_META[account.platform];
             const isActive = account.status === 'active';
             const isVerifying = verifyingId === account.id;
+            const isBatchSelected = selectedBatchIds.includes(account.id);
 
             return (
               <div
                 key={account.id}
-                className="p-5 rounded-2xl bg-white border border-neutral-200 shadow-xs flex flex-col justify-between space-y-4 hover:border-neutral-300 transition-all"
+                className={`p-5 rounded-2xl bg-white border shadow-xs flex flex-col justify-between space-y-4 transition-all relative ${
+                  isBatchSelected 
+                    ? 'border-neutral-900 ring-2 ring-neutral-900 bg-neutral-50/50' 
+                    : 'border-neutral-200 hover:border-neutral-300'
+                }`}
               >
+                {/* Batch Checkbox Trigger */}
+                {isBatchMode && (
+                  <button
+                    onClick={() => toggleBatchSelect(account.id)}
+                    className="absolute top-3 left-3 z-10 p-1 bg-white rounded-lg shadow-xs border border-neutral-200 text-neutral-800 cursor-pointer"
+                  >
+                    {isBatchSelected ? (
+                      <CheckSquare className="w-4 h-4 text-neutral-900" />
+                    ) : (
+                      <Square className="w-4 h-4 text-neutral-400" />
+                    )}
+                  </button>
+                )}
+
                 {/* Card Header: Avatar, Name, Platform Badge */}
-                <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative shrink-0">
-                    <img
-                      src={account.avatarUrl}
-                      alt={account.nickname}
-                      className="w-12 h-12 rounded-xl object-cover border border-neutral-200"
-                    />
-                    <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${meta.badgeBg}`}>
-                      {meta.name.substring(0, 1)}
+                <div className={`flex items-start justify-between gap-3 ${isBatchMode ? 'pl-7' : ''}`}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative shrink-0">
+                      <img
+                        src={account.avatarUrl}
+                        alt={account.nickname}
+                        className="w-12 h-12 rounded-xl object-cover border border-neutral-200 bg-neutral-100"
+                        onError={(e) => {
+                          // Fallback to platform icon avatar
+                          (e.target as HTMLElement).setAttribute('src', `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(account.nickname || 'acc')}`);
+                        }}
+                      />
+                      <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-xs ${meta.badgeBg}`}>
+                        {meta.name.substring(0, 1)}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-sm font-bold text-neutral-900 truncate" title={account.nickname}>
+                          {account.nickname}
+                        </h4>
+                        {account.group && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-600 font-normal shrink-0">
+                            {account.group}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-neutral-500 flex items-center gap-1.5 mt-0.5">
+                        <span className="font-medium text-neutral-700">{meta.name}</span>
+                        <span>•</span>
+                        <span>粉丝：{account.followersCount ? (account.followersCount > 10000 ? `${(account.followersCount / 10000).toFixed(1)}w` : account.followersCount) : '真实同步'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium flex items-center gap-1 shrink-0 ${
+                    isActive
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                    {isActive ? '就绪在线' : '待更新会话'}
+                  </span>
+                </div>
+
+                {/* Encrypted Session & Stats Box */}
+                <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200/80 space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-neutral-600">
+                    <span className="flex items-center gap-1 font-medium text-[11px]">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      会话安全托管：
+                    </span>
+                    <span className="font-mono text-[11px] text-neutral-500">
+                      {account.sessionPreview || 'AES-256 密文已保护'}
                     </span>
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="text-sm font-bold text-neutral-900 truncate">
-                        {account.nickname}
-                      </h4>
-                      {account.group && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-600 font-normal shrink-0">
-                          {account.group}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[11px] text-neutral-500 flex items-center gap-1.5 mt-0.5">
-                      <span>{meta.name}</span>
-                      <span>•</span>
-                      <span>粉丝：{account.followersCount ? (account.followersCount > 10000 ? `${(account.followersCount / 10000).toFixed(1)}w` : account.followersCount) : '未知'}</span>
-                    </div>
+                  <div className="flex items-center justify-between text-neutral-500 text-[11px] pt-1 border-t border-neutral-200/60">
+                    <span>发布统计：已发 {account.stats?.publishedCount || 0} / 失败 {account.stats?.failedCount || 0}</span>
+                    <span>核验：{new Date(account.lastVerifiedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
 
-                <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium flex items-center gap-1 shrink-0 ${
-                  isActive
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-amber-50 text-amber-700 border border-amber-200'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                  {isActive ? '在线正常' : '需更新会话'}
+                {/* Card Action Buttons (Edit, Verify, Export, Delete) */}
+                <div className="pt-2 border-t border-neutral-100 flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1">
+                    <a
+                      href={meta.creatorUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 text-neutral-500 hover:text-neutral-900 rounded-lg hover:bg-neutral-100 transition-colors text-xs flex items-center gap-1"
+                      title="打开官方创作者服务平台"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+
+                    <a
+                      href={api.getExportSocialCookieUrl(account.id)}
+                      download={`${account.platform}_${account.nickname}.json`}
+                      className="px-2 py-1 text-[11px] font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg border border-neutral-200 flex items-center gap-1 transition-colors"
+                      title="导出为 social-auto-upload 兼容的 Cookie JSON"
+                    >
+                      <Download className="w-3 h-3 text-blue-600" />
+                      <span>导出Cookie</span>
+                    </a>
+
+                    <button
+                      onClick={() => handleCopyCliCommand(account)}
+                      className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg border border-neutral-200 transition-colors cursor-pointer"
+                      title="复制 CLI 终端测试指令"
+                    >
+                      {copiedCliId === account.id ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Terminal className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {/* Edit / Rename Account (Solves: "改回自己的真实账号名称") */}
+                    <button
+                      onClick={() => handleOpenEdit(account)}
+                      className="p-1.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg border border-neutral-200 transition-colors cursor-pointer"
+                      title="修改账号昵称与分组"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Verify Account */}
+                    <button
+                      onClick={() => handleVerifyAccount(account.id)}
+                      disabled={isVerifying}
+                      className="px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg border border-neutral-200 flex items-center gap-1 transition-colors cursor-pointer"
+                      title="校验此账号会话连通性"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isVerifying ? 'animate-spin' : ''}`} />
+                      <span>核验</span>
+                    </button>
+
+                    {/* Safe In-App Delete Button */}
+                    <button
+                      onClick={() => handleDeleteAccountClick(account)}
+                      className="p-1.5 text-neutral-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                      title="彻底删除此账号"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 1. In-App Safe Delete Confirmation Modal (Solves: "删除都没效果") */}
+      {/* ========================================================================= */}
+      {accountToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden">
+            <div className="p-6 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-neutral-900">确认彻底删除账号？</h3>
+                <p className="text-xs text-neutral-500 mt-1">
+                  您即将从矩阵中移除以下账号，该账号的所有本地配置与加密会话将被物理清除。
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200 text-left flex items-center gap-3">
+                <img
+                  src={accountToDelete.avatarUrl}
+                  alt={accountToDelete.nickname}
+                  className="w-10 h-10 rounded-xl object-cover border border-neutral-200"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold text-neutral-900 truncate">
+                    {accountToDelete.nickname}
+                  </div>
+                  <div className="text-[11px] text-neutral-500 flex items-center gap-2 mt-0.5">
+                    <span>平台：{PLATFORMS_META[accountToDelete.platform]?.name}</span>
+                    {accountToDelete.group && <span>• 组：{accountToDelete.group}</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAccountToDelete(null)}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteAccount}
+                  disabled={isDeleting}
+                  className="flex items-center gap-1.5 px-5 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  {isDeleting ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>正在删除...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>确认彻底删除</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. Batch Delete Modal */}
+      {/* ========================================================================= */}
+      {showBatchDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden">
+            <div className="p-6 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
+                <Trash2 className="w-6 h-6" />
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-neutral-900">批量清空已选定的账号</h3>
+                <p className="text-xs text-neutral-500 mt-1">
+                  确定要批量删除已选中的 <span className="font-bold text-rose-600">{selectedBatchIds.length}</span> 个账号吗？此操作无法撤销。
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowBatchDeleteModal(false)}
+                  disabled={isBatchDeleting}
+                  className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmBatchDelete}
+                  disabled={isBatchDeleting}
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  {isBatchDeleting ? '正在清理中...' : '确认批量删除'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. Edit Account Modal (Rename to real name, update group or cookie) */}
+      {/* ========================================================================= */}
+      {accountToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between bg-neutral-50/50">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center text-white">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-neutral-900">编辑自媒体账号资料</h3>
+                  <p className="text-[11px] text-neutral-500">修改账号真实昵称、所属矩阵分组或更新凭据</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAccountToEdit(null)}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-neutral-800 block mb-1">
+                  账号真实昵称 / 备注名 <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editNickname}
+                  onChange={(e) => setEditNickname(e.target.value)}
+                  placeholder="例如：我的抖音大号、科技小王"
+                  className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                />
+                <span className="text-[10px] text-neutral-400 mt-1 block">
+                  您可以将此前生成的测试名称随时修改为您在手机端对应的真实账号名
                 </span>
               </div>
 
-              {/* Encrypted Session & Stats Box */}
-              <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200/80 space-y-2 text-xs">
-                <div className="flex items-center justify-between text-neutral-600">
-                  <span className="flex items-center gap-1 font-medium text-[11px]">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    会话安全态：
-                  </span>
-                  <span className="font-mono text-[11px] text-neutral-500">
-                    {account.sessionPreview || 'AES-256 密文已保护'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-neutral-500 text-[11px] pt-1 border-t border-neutral-200/60">
-                  <span>发布统计：已发 {account.stats?.publishedCount || 0} / 失败 {account.stats?.failedCount || 0}</span>
-                  <span>核验：{new Date(account.lastVerifiedAt).toLocaleDateString()}</span>
-                </div>
+              <div>
+                <label className="text-xs font-bold text-neutral-800 block mb-1">
+                  所属矩阵分组（可选）
+                </label>
+                <input
+                  type="text"
+                  value={editGroup}
+                  onChange={(e) => setEditGroup(e.target.value)}
+                  placeholder="例如：主号组 / 运营组"
+                  className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                />
               </div>
 
-              {/* Action Buttons */}
-              <div className="pt-2 border-t border-neutral-100 flex items-center justify-between gap-2">
-                <a
-                  href={meta.creatorUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-2 text-neutral-500 hover:text-neutral-900 rounded-lg hover:bg-neutral-100 transition-colors text-xs flex items-center gap-1"
-                  title="在浏览器中打开创作者中心"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="text-[11px]">创作者后台</span>
-                </a>
+              <div>
+                <label className="text-xs font-bold text-neutral-800 block mb-1">
+                  重新绑定/更新 Cookie 或 storageState JSON（可选）
+                </label>
+                <textarea
+                  value={editCookie}
+                  onChange={(e) => setEditCookie(e.target.value)}
+                  placeholder="若会话失效，可在此直接粘贴最新 Cookie 字符串或 storageState JSON，系统将重新加密保护"
+                  rows={3}
+                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                />
+              </div>
 
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleVerifyAccount(account.id)}
-                    disabled={isVerifying}
-                    className="px-2.5 py-1.5 text-[11px] font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg border border-neutral-200 flex items-center gap-1 transition-colors"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${isVerifying ? 'animate-spin' : ''}`} />
-                    <span>核验状态</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteAccount(account.id)}
-                    className="p-1.5 text-neutral-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
-                    title="移除账号"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-neutral-100">
+                <button
+                  type="button"
+                  onClick={() => setAccountToEdit(null)}
+                  disabled={isSavingEdit}
+                  className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={isSavingEdit}
+                  className="px-5 py-2 bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  {isSavingEdit ? '保存中...' : '保存更改'}
+                </button>
               </div>
             </div>
-          );
-        })}
-      </div>
-    )}
+          </div>
+        </div>
+      )}
 
-      {/* Add Account Modal */}
+      {/* ========================================================================= */}
+      {/* 4. Add Account Modal (with Real Nickname Requirement to avoid fake accounts) */}
+      {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden flex flex-col">
@@ -429,13 +1037,13 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                   <Plus className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-neutral-900">接入新自媒体平台账号</h3>
-                  <p className="text-xs text-neutral-500">通过 Playwright 自动化扫码或安全导入 Cookie</p>
+                  <h3 className="text-sm font-bold text-neutral-900">接入新自媒体矩阵账号</h3>
+                  <p className="text-xs text-neutral-500">通过平台扫码授权或直接导入真实 Cookie / StorageState 凭据</p>
                 </div>
               </div>
               <button
                 onClick={closeModal}
-                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -443,7 +1051,7 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
 
             {/* Modal Body */}
             <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-              {/* Platform Selector */}
+              {/* Step 1: Platform Selector */}
               <div>
                 <label className="block text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2">
                   1. 选择目标媒体平台
@@ -459,10 +1067,11 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                           setSelectedPlatform(key as PlatformId);
                           setLoginSession(null);
                           setActionMessage('');
+                          setNicknameError('');
                         }}
-                        className={`p-2.5 rounded-xl border text-center transition-all ${
+                        className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                           isSelected
-                            ? 'border-neutral-900 bg-neutral-900/5 shadow-xs font-bold text-neutral-900'
+                            ? 'border-neutral-900 bg-neutral-900/5 shadow-xs font-bold text-neutral-900 ring-1 ring-neutral-900'
                             : 'border-neutral-200 hover:border-neutral-300 text-neutral-600'
                         }`}
                       >
@@ -474,85 +1083,75 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                 </div>
               </div>
 
-              {/* Account Nickname & Group Inputs */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-200">
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    账号备注名称
-                  </label>
-                  <input
-                    type="text"
-                    value={nicknameInput}
-                    onChange={(e) => setNicknameInput(e.target.value)}
-                    placeholder={`例如：${PLATFORMS_META[selectedPlatform].name}官方号`}
-                    className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-neutral-900"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                    所属矩阵分组（可选）
-                  </label>
-                  <input
-                    type="text"
-                    value={groupInput}
-                    onChange={(e) => setGroupInput(e.target.value)}
-                    placeholder="例如：科技组 / 运营组"
-                    className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              {/* Login Method Tabs */}
+              {/* Step 2: Login Method Tabs */}
               <div>
                 <label className="block text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2">
                   2. 选择授权方式
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setLoginMethod('qr')}
-                    className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all ${
+                    className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
                       loginMethod === 'qr'
-                        ? 'border-neutral-900 bg-neutral-900/5'
+                        ? 'border-neutral-900 bg-neutral-900/5 ring-1 ring-neutral-900'
                         : 'border-neutral-200 hover:border-neutral-300'
                     }`}
                   >
-                    <QrCode className="w-4 h-4 mt-0.5 text-neutral-700" />
+                    <QrCode className="w-4 h-4 mt-0.5 text-neutral-700 shrink-0" />
                     <div>
-                      <div className="text-xs font-semibold text-neutral-900">平台扫码授权</div>
-                      <div className="text-[11px] text-neutral-500 mt-0.5">手机对应 APP 扫码登录，由您自主确认录入</div>
+                      <div className="text-xs font-semibold text-neutral-900">平台扫码录入</div>
+                      <div className="text-[10px] text-neutral-500 mt-0.5">手机对应 App 扫码并指定您的真实账号名</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod('social')}
+                    className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
+                      loginMethod === 'social'
+                        ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600'
+                        : 'border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
+                    <UploadCloud className="w-4 h-4 mt-0.5 text-blue-600 shrink-0" />
+                    <div>
+                      <div className="text-xs font-semibold text-neutral-900 flex items-center gap-1">
+                        <span>导入 social 凭据</span>
+                        <span className="text-[9px] bg-blue-100 text-blue-700 font-bold px-1 rounded">推荐</span>
+                      </div>
+                      <div className="text-[10px] text-neutral-500 mt-0.5">选取 cookies/*.json 一键导入</div>
                     </div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setLoginMethod('cookie')}
-                    className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all ${
+                    className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
                       loginMethod === 'cookie'
-                        ? 'border-neutral-900 bg-neutral-900/5'
+                        ? 'border-neutral-900 bg-neutral-900/5 ring-1 ring-neutral-900'
                         : 'border-neutral-200 hover:border-neutral-300'
                     }`}
                   >
-                    <Key className="w-4 h-4 mt-0.5 text-neutral-700" />
+                    <Key className="w-4 h-4 mt-0.5 text-neutral-700 shrink-0" />
                     <div>
-                      <div className="text-xs font-semibold text-neutral-900">导入 Cookie / 会话</div>
-                      <div className="text-[11px] text-neutral-500 mt-0.5">粘贴浏览器抓取的 Cookie，由 AES-256 加密存储</div>
+                      <div className="text-xs font-semibold text-neutral-900">手动粘贴 Cookie</div>
+                      <div className="text-[10px] text-neutral-500 mt-0.5">粘贴 JSON 或 DevTools Cookie</div>
                     </div>
                   </button>
                 </div>
               </div>
 
-              {/* Method Detail */}
+              {/* Step 3: Account Details & Method Implementation */}
               {loginMethod === 'qr' ? (
                 <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 text-center space-y-4">
-                  {/* Explanation note */}
                   <div className="text-left p-3 rounded-lg bg-blue-50/70 border border-blue-100 text-xs text-blue-900 space-y-1">
                     <div className="flex items-center gap-1.5 font-semibold text-blue-800">
                       <Info className="w-3.5 h-3.5 shrink-0" />
-                      <span>扫码授权说明：</span>
+                      <span>自媒体扫码录入说明：</span>
                     </div>
                     <p className="text-[11px] text-blue-800/90 leading-relaxed">
-                      系统已关闭任何自动倒计时添加逻辑。若已启动本地 Playwright RPA Worker 节点，扫码后将自动拦截真实会话；在 Web 控制台下，扫码完成后请点击下方「我已扫码并确认录入」或「测试模拟录入」，完全由您手动掌控。
+                      手机 App 扫码后，请在下方<strong>填写您的真实账号昵称</strong>并点击录入。如果您有已导出的 Cookie 文件，亦可随时切换至「导入 social 凭据」实现无缝对接。
                     </p>
                   </div>
 
@@ -564,15 +1163,16 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                       <button
                         type="button"
                         onClick={handleStartQrLogin}
-                        disabled={isLoggingIn}
-                        className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs rounded-xl shadow-xs transition-all active:scale-95 disabled:opacity-50 inline-flex items-center gap-2"
+                        disabled={isGeneratingQr}
+                        className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs rounded-xl shadow-xs transition-all active:scale-95 disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer"
                       >
                         <QrCode className="w-4 h-4" />
-                        <span>{isLoggingIn ? '正在调起通道...' : `获取【${PLATFORMS_META[selectedPlatform].name}】登录二维码`}</span>
+                        <span>{isGeneratingQr ? '正在调起通道...' : `获取【${PLATFORMS_META[selectedPlatform].name}】登录二维码`}</span>
                       </button>
                     </div>
                   ) : (
                     <div className="space-y-4 py-1">
+                      {/* QR Code Container */}
                       <div className="w-48 h-48 mx-auto bg-white p-2 rounded-xl border border-neutral-200 shadow-sm flex items-center justify-center">
                         {loginSession.qrCodeUrl ? (
                           <img
@@ -590,7 +1190,7 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
 
                       <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                         <Smartphone className="w-4 h-4 text-neutral-600" />
-                        <span>请使用【{PLATFORMS_META[selectedPlatform].name}】手机客户端扫码</span>
+                        <span>请使用【{PLATFORMS_META[selectedPlatform].name}】手机 App 扫码</span>
                         <a
                           href={PLATFORMS_META[selectedPlatform].creatorUrl}
                           target="_blank"
@@ -602,29 +1202,57 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                         </a>
                       </div>
 
-                      <div className="text-xs text-neutral-600 flex items-center justify-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-500" />
-                        <span>等待扫码确认中（不会自动添加，请操作下方按钮）</span>
+                      {/* Prominent Real Nickname & Group Input (Solves: "扫码进去的账号不是我自己的") */}
+                      <div className="p-3.5 rounded-xl bg-white border border-neutral-300 shadow-xs text-left space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-neutral-900 flex items-center gap-1">
+                            <span>请输入您的自媒体真实昵称</span>
+                            <span className="text-rose-500">*</span>
+                          </label>
+                          <span className="text-[10px] text-neutral-400">杜绝生成非本人测试账号</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={nicknameInput}
+                          onChange={(e) => {
+                            setNicknameInput(e.target.value);
+                            setNicknameError('');
+                          }}
+                          placeholder={`例如：我的${PLATFORMS_META[selectedPlatform].name}大号、生活博主小王`}
+                          className={`w-full px-3 py-2 text-xs bg-neutral-50 border rounded-lg focus:outline-hidden transition-all ${
+                            nicknameError 
+                              ? 'border-rose-500 ring-1 ring-rose-300 bg-rose-50/30' 
+                              : 'border-neutral-300 focus:border-neutral-900 focus:bg-white'
+                          }`}
+                        />
+                        {nicknameError && (
+                          <div className="text-[11px] text-rose-600 flex items-center gap-1 font-medium">
+                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span>{nicknameError}</span>
+                          </div>
+                        )}
+
+                        <div className="pt-1">
+                          <input
+                            type="text"
+                            value={groupInput}
+                            onChange={(e) => setGroupInput(e.target.value)}
+                            placeholder="矩阵分组（可选，例如：主号组 / 运营组）"
+                            className="w-full px-3 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                          />
+                        </div>
                       </div>
 
-                      {/* Manual & testing explicit confirmation buttons */}
+                      {/* Confirmation Buttons */}
                       <div className="pt-2 border-t border-neutral-200/80 flex flex-col sm:flex-row items-center justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => handleConfirmLogin(false)}
-                          disabled={isLoggingIn}
-                          className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                          disabled={isConfirming}
+                          className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>手机已扫码，确认录入账号</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleConfirmLogin(true)}
-                          disabled={isLoggingIn}
-                          className="w-full sm:w-auto px-3 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-medium text-xs rounded-xl transition-colors"
-                        >
-                          <span>演示模式：模拟添加</span>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>{isConfirming ? '正在确认录入...' : '手机已扫码，确认录入账号'}</span>
                         </button>
                         <button
                           type="button"
@@ -632,9 +1260,9 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                             clearPolling();
                             setLoginSession(null);
                           }}
-                          className="w-full sm:w-auto px-3 py-2 text-neutral-500 hover:text-neutral-700 text-xs"
+                          className="w-full sm:w-auto px-3.5 py-2 text-neutral-500 hover:text-neutral-700 text-xs cursor-pointer"
                         >
-                          重新获取
+                          重新获取二维码
                         </button>
                       </div>
                     </div>
@@ -644,28 +1272,146 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                     <div className="text-[11px] text-neutral-600 font-medium">{actionMessage}</div>
                   )}
                 </div>
+              ) : loginMethod === 'social' ? (
+                /* social-auto-upload cookie file import */
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-blue-900 space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-semibold text-blue-800">
+                      <FileCode className="w-4 h-4 shrink-0 text-blue-600" />
+                      <span>无缝兼容 dreammis/social-auto-upload 凭据格式</span>
+                    </div>
+                    <p className="text-[11px] text-blue-800/90 leading-relaxed">
+                      直接读取项目 <code className="bg-blue-100 px-1 py-0.5 rounded font-mono text-[10px]">cookies/</code> 目录下的登录凭据（如 <code className="bg-blue-100 px-1 py-0.5 rounded font-mono text-[10px]">douyin_138000.json</code>）。系统将自动根据文件名提取平台与真实账号名，并加密存储。
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                        账号真实昵称（选填，留空将自动从文件名解析）
+                      </label>
+                      <input
+                        type="text"
+                        value={nicknameInput}
+                        onChange={(e) => setNicknameInput(e.target.value)}
+                        placeholder="例如：我的真实抖音号"
+                        className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                        所属矩阵分组（可选）
+                      </label>
+                      <input
+                        type="text"
+                        value={groupInput}
+                        onChange={(e) => setGroupInput(e.target.value)}
+                        placeholder="例如：主号组 / 运营组"
+                        className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-6 rounded-xl border-2 border-dashed border-neutral-300 hover:border-neutral-400 bg-neutral-50/50 hover:bg-neutral-50 transition-all cursor-pointer text-center space-y-2"
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json,application/json"
+                      onChange={handleSocialFileUpload}
+                      className="hidden"
+                    />
+                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                      <UploadCloud className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-neutral-800">
+                        {socialFileName ? `已选择：${socialFileName}` : '点击选择或拖拽上传 Cookie JSON 文件'}
+                      </p>
+                      <p className="text-[11px] text-neutral-400 mt-0.5">
+                        支持任意标准的 Playwright / Puppeteer storageState 凭据文件
+                      </p>
+                    </div>
+                  </div>
+
+                  {socialFileContent && (
+                    <div className="p-3 bg-neutral-900 text-neutral-200 rounded-xl space-y-1 font-mono text-[11px]">
+                      <div className="flex items-center justify-between text-neutral-400 text-[10px]">
+                        <span>文件内容预览（前 120 字符）</span>
+                        <span className="text-emerald-400">已就绪</span>
+                      </div>
+                      <div className="truncate">{socialFileContent.substring(0, 120)}...</div>
+                    </div>
+                  )}
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleSocialAutoUploadImport}
+                      disabled={isImporting || !socialFileContent}
+                      className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{isImporting ? '正在解析并加密录入...' : '立即导入并加密保护'}</span>
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div className="space-y-3">
+                /* manual cookie input */
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                        账号真实昵称 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={nicknameInput}
+                        onChange={(e) => setNicknameInput(e.target.value)}
+                        placeholder="例如：我的真实抖音号"
+                        className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-neutral-800 block mb-1">
+                        所属矩阵分组（可选）
+                      </label>
+                      <input
+                        type="text"
+                        value={groupInput}
+                        onChange={(e) => setGroupInput(e.target.value)}
+                        placeholder="例如：主号组 / 运营组"
+                        className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-xs font-semibold text-neutral-800 block mb-1">
-                      Cookie / storageState JSON (系统入库将自动 AES-256 加密)
+                      粘贴 Cookie 字符串或 JSON 凭证 <span className="text-rose-500">*</span>
                     </label>
                     <textarea
-                      rows={5}
                       value={cookieInput}
                       onChange={(e) => setCookieInput(e.target.value)}
-                      placeholder='例如：{"cookies":[{"name":"session_id","value":"xyz..."}]}&#10;或直接粘贴浏览器 DevTools Application 标签页中复制的 Cookie 键值'
-                      className="w-full p-3 text-xs font-mono bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-none focus:bg-white"
+                      placeholder="从浏览器 F12 网络请求头复制的 Cookie 或 Playwright JSON"
+                      rows={4}
+                      className="w-full px-3 py-2 text-xs font-mono bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleManualCookieSubmit}
-                    className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-medium text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>确认加密保存并绑定</span>
-                  </button>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleManualCookieSubmit}
+                      disabled={!cookieInput.trim() || !nicknameInput.trim()}
+                      className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>确认录入</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

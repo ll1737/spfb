@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Monitor, Radio, ShieldCheck, User as UserIcon, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { Send, Monitor, User as UserIcon, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { User } from '../types';
 
 interface HeaderProps {
-  workerConnected: boolean;
+  workerConnected?: boolean;
   onOpenPublish: () => void;
   activeTab: string;
   currentUser: User | null;
@@ -12,7 +12,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  workerConnected,
   onOpenPublish,
   activeTab,
   currentUser,
@@ -69,34 +68,6 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Worker connection status pill */}
-        <div 
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-            workerConnected 
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-amber-50 text-amber-800 border-amber-200'
-          }`}
-          title={workerConnected ? 'Playwright RPA Worker 在线并就绪' : 'Worker 离线或正在连接，部分平台 RPA 需启动 Worker'}
-        >
-          <span className="relative flex h-2 w-2">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-              workerConnected ? 'bg-emerald-400' : 'bg-amber-400'
-            }`}></span>
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${
-              workerConnected ? 'bg-emerald-500' : 'bg-amber-500'
-            }`}></span>
-          </span>
-          <span className="font-mono">
-            {workerConnected ? 'Worker: 就绪 (8000)' : 'Worker: 待连接'}
-          </span>
-        </div>
-
-        {/* AES Shield */}
-        <div className="hidden md:flex items-center gap-1 text-xs text-neutral-500 bg-neutral-50 px-2.5 py-1.5 rounded-lg border border-neutral-200">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>AES-256 加密</span>
-        </div>
-
         {/* Primary Action Button */}
         <button
           onClick={onOpenPublish}

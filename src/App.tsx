@@ -159,6 +159,11 @@ export default function App() {
     showToast('已移除账号及凭证');
   };
 
+  const handleAccountUpdated = (updated: Account) => {
+    setAccounts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    showToast(`✅ 账号【${updated.nickname}】资料已更新`);
+  };
+
   const handleUpdateSettings = async (updated: Partial<SystemSettings>) => {
     const res = await api.updateSettings(updated);
     setSettings(res);
@@ -267,6 +272,7 @@ export default function App() {
               onRefresh={loadData}
               onAccountAdded={handleAccountAdded}
               onAccountDeleted={handleAccountDeleted}
+              onAccountUpdated={handleAccountUpdated}
             />
           )}
 
@@ -287,6 +293,7 @@ export default function App() {
         accounts={accounts}
         content={content}
         onSubmit={handlePublishSubmit}
+        onNavigateToAccounts={() => setActiveTab('accounts')}
       />
 
       {/* User Profile & Security Modal */}

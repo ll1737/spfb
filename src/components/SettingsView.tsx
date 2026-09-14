@@ -235,6 +235,92 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
+        {/* dreammis/social-auto-upload Integration Engine */}
+        <div className="p-6 rounded-2xl bg-white border border-neutral-200 shadow-xs space-y-5">
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-blue-600" />
+              <h4 className="text-sm font-bold text-neutral-900">social-auto-upload 引擎与防检测强化</h4>
+            </div>
+            <a
+              href={api.getWorkerScriptDownloadUrl()}
+              download="social_auto_upload_worker.py"
+              className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
+              title="下载可以直接在本地运行的 Python FastAPI Worker 脚本"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-blue-600" />
+              <span>下载配套 Python Worker 脚本</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 space-y-3">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <div className="text-xs font-bold text-neutral-900">启用 Patchright 强化反指纹</div>
+                  <div className="text-[11px] text-neutral-500 mt-0.5">重构 Chromium 驱动底层，规避 Cloudflare 和大厂爬虫检测</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.usePatchright ?? false}
+                  onChange={(e) => setFormData({ ...formData, usePatchright: e.target.checked })}
+                  className="w-4 h-4 text-neutral-900 rounded focus:ring-neutral-900"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer pt-2 border-t border-neutral-200/60">
+                <div>
+                  <div className="text-xs font-bold text-neutral-900">注入 Playwright Stealth 规避风控</div>
+                  <div className="text-[11px] text-neutral-500 mt-0.5">抹除 navigator.webdriver，伪造 Chrome 插件与特征</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.enableStealth ?? true}
+                  onChange={(e) => setFormData({ ...formData, enableStealth: e.target.checked })}
+                  className="w-4 h-4 text-neutral-900 rounded focus:ring-neutral-900"
+                />
+              </label>
+            </div>
+
+            <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 space-y-3">
+              <div>
+                <label className="text-xs font-bold text-neutral-800 block mb-1">
+                  真人按键随机延迟 (Human Typing Delay)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={500}
+                    value={formData.humanTypingDelay ?? 50}
+                    onChange={(e) => setFormData({ ...formData, humanTypingDelay: parseInt(e.target.value) || 0 })}
+                    className="w-24 px-3 py-1.5 text-xs font-mono bg-white border border-neutral-200 rounded-lg"
+                  />
+                  <span className="text-xs text-neutral-500">毫秒 (ms) - 标题和文本逐字仿真敲击</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-800 block mb-1">
+                  本地 social-auto-upload 仓库路径 (可选)
+                </label>
+                <input
+                  type="text"
+                  value={formData.socialAutoUploadPath ?? ''}
+                  onChange={(e) => setFormData({ ...formData, socialAutoUploadPath: e.target.value })}
+                  placeholder="例如：/Users/name/social-auto-upload"
+                  className="w-full px-3 py-1.5 text-xs font-mono bg-white border border-neutral-200 rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 text-xs text-neutral-600 font-mono flex items-center justify-between">
+            <span className="truncate">本地启动命令：pip install fastapi uvicorn playwright &amp;&amp; python social_auto_upload_worker.py</span>
+            <span className="shrink-0 text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold ml-2">自动同步状态</span>
+          </div>
+        </div>
+
         {/* Security and AES Storage */}
         <div className="p-6 rounded-2xl bg-white border border-neutral-200 shadow-xs space-y-4">
           <div className="flex items-center gap-2 border-b border-neutral-100 pb-3">
