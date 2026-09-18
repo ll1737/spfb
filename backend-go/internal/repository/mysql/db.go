@@ -104,6 +104,8 @@ func InitMySQL(cfg config.MySQLConfig) (*gorm.DB, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to auto migrate tables: %w", err)
 		}
+		// Fix legacy columns if any
+		_ = db.Exec("ALTER TABLE module_permission_rules MODIFY COLUMN permissions_json TEXT NULL DEFAULT NULL").Error
 		logger.Log.Info("GORM MySQL AutoMigrate completed for all domain models")
 	}
 
