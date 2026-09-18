@@ -22,7 +22,7 @@ func NewWorkerClient(cfg *config.Config) *WorkerClient {
 	return &WorkerClient{
 		cfg: cfg,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 45 * time.Second,
 		},
 	}
 }
@@ -142,33 +142,11 @@ func getPlatformOfficialLoginURL(platform string) string {
 }
 
 func (c *WorkerClient) AccountLoginStart(ctx context.Context, platform, accountID string) (map[string]interface{}, error) {
-	res, err := c.accountLoginRequest(ctx, http.MethodPost, fmt.Sprintf("/worker/accounts/%s/%s/login/start", url.PathEscape(platform), url.PathEscape(accountID)), nil)
-	if err != nil {
-		logger.Log.Warnf("Worker login start failed (%v), using built-in QR session fallback", err)
-		return map[string]interface{}{
-			"success":        true,
-			"status":         "WAIT_SCAN",
-			"loginSessionId": accountID,
-			"message":        fmt.Sprintf("已调起【%s】官方扫码通道", platform),
-		}, nil
-	}
-	return res, nil
+	return c.accountLoginRequest(ctx, http.MethodPost, fmt.Sprintf("/worker/accounts/%s/%s/login/start", url.PathEscape(platform), url.PathEscape(accountID)), nil)
 }
 
 func (c *WorkerClient) AccountLoginQRCode(ctx context.Context, platform, accountID string) (map[string]interface{}, error) {
-	res, err := c.accountLoginRequest(ctx, http.MethodGet, fmt.Sprintf("/worker/accounts/%s/%s/login/qrcode", url.PathEscape(platform), url.PathEscape(accountID)), nil)
-	if err != nil {
-		logger.Log.Warnf("Worker login QR fetch failed (%v), using built-in QR generator", err)
-		officialURL := getPlatformOfficialLoginURL(platform)
-		qrURL := fmt.Sprintf("https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=%s", url.QueryEscape(officialURL))
-		return map[string]interface{}{
-			"success":   true,
-			"status":    "WAIT_SCAN",
-			"qrCodeUrl": qrURL,
-			"message":   fmt.Sprintf("已生成【%s】官方创作者登录二维码", platform),
-		}, nil
-	}
-	return res, nil
+	return c.accountLoginRequest(ctx, http.MethodGet, fmt.Sprintf("/worker/accounts/%s/%s/login/qrcode", url.PathEscape(platform), url.PathEscape(accountID)), nil)
 }
 
 func (c *WorkerClient) AccountLoginStatus(ctx context.Context, platform, accountID string) (map[string]interface{}, error) {

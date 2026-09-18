@@ -44,8 +44,8 @@ function getServiceEnvironment() {
     PORT: '8088',
     DATABASE_PATH: path.join(dataDir, 'zhiyu.sqlite'),
     SCREENSHOT_DIR: path.join(appDataRoot, 'debug_snapshots'),
-    APP_SECRET: process.env.APP_SECRET || ensureRuntimeValue(dataDir, '.app-secret'),
-    WORKER_API_KEY: process.env.WORKER_API_KEY || ensureRuntimeValue(dataDir, '.worker-api-key'),
+    APP_SECRET: process.env.APP_SECRET || 'zhiyu_matrix_app_secret_super_secure_2026',
+    WORKER_API_KEY: process.env.WORKER_API_KEY || 'secret_worker_token_2026',
     DESKTOP_MODE: 'true'
   };
 }
