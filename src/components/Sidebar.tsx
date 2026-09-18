@@ -52,21 +52,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenProfile
 }) => {
   const navSections: NavSection[] = [
-    { title: '概览', items: [{ id: 'dashboard', label: '工作台', icon: LayoutDashboard, badge: null }] },
-    { title: 'AI 内容生产', items: [
-      { id: 'creators', label: 'AI 创作者', icon: Users2, badge: null },
-      { id: 'topics', label: '选题池', icon: Sparkles, badge: null },
-      { id: 'memory', label: '知识与记忆', icon: BrainCircuit, badge: null },
-      { id: 'editor', label: '文案创作', icon: PenTool, badge: null },
-      { id: 'content_packages', label: '内容中心', icon: Package, badge: null },
-      { id: 'calendar', label: '内容日历', icon: Calendar, badge: null },
-      { id: 'tasks', label: '发布中心', icon: ListTodo, badge: pendingTasksCount > 0 ? `${pendingTasksCount} 排队` : null, badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' }
-    ] },
-    { title: '账号与组织', items: [
-      { id: 'accounts', label: '平台账号', icon: Share2, badge: `${activeAccountsCount}/${totalAccountsCount}`, badgeColor: activeAccountsCount > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-700/40 text-slate-400' },
-      { id: 'enterprise', label: '企业与团队', icon: Building2, badge: null }
-    ] },
-    { title: '系统', items: [{ id: 'settings', label: '系统与 Worker', icon: Settings, badge: null }] }
+    {
+      title: '概览',
+      items: [
+        { id: 'dashboard', label: '工作台', icon: LayoutDashboard, badge: null }
+      ]
+    },
+    {
+      title: 'AI 内容创作',
+      items: [
+        { id: 'creators', label: 'AI 创作者', icon: Users2, badge: null },
+        { id: 'topics', label: '选题池', icon: Sparkles, badge: null },
+        { id: 'editor', label: '文案创作', icon: PenTool, badge: null },
+        { id: 'content_packages', label: '内容中心', icon: Package, badge: null },
+        { id: 'workflow', label: '自动化工作流', icon: Workflow, badge: null }
+      ]
+    },
+    {
+      title: '内容资产',
+      items: [
+        { id: 'assets', label: '素材中心', icon: FolderKanban, badge: null },
+        { id: 'memory', label: '知识与记忆', icon: BrainCircuit, badge: null }
+      ]
+    },
+    {
+      title: '矩阵运营',
+      items: [
+        { id: 'calendar', label: '内容日历', icon: Calendar, badge: null },
+        { id: 'tasks', label: '发布中心', icon: ListTodo, badge: pendingTasksCount > 0 ? `${pendingTasksCount} 排队` : null, badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
+        { id: 'analytics', label: '数据分析', icon: BarChart3, badge: null }
+      ]
+    },
+    {
+      title: '账号与组织',
+      items: [
+        { id: 'accounts', label: '平台账号', icon: Share2, badge: `${activeAccountsCount}/${totalAccountsCount}`, badgeColor: activeAccountsCount > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-700/40 text-slate-400' },
+        { id: 'enterprise', label: '企业与团队', icon: Building2, badge: null },
+        { id: 'plans', label: '套餐与用量', icon: CreditCard, badge: null }
+      ]
+    },
+    {
+      title: '系统',
+      items: [
+        { id: 'settings', label: '系统与 Worker', icon: Settings, badge: null }
+      ]
+    }
   ];
 
   return (
