@@ -15,11 +15,17 @@ import {
   TeamMember,
   CollaborationRule,
   ModulePermissionRule,
+  Creator,
+  CreatorInput,
+  CreatorOpsSummary,
+  CreatorPlan,
   CreatorPersona,
   MemoryCategory,
   MemoryItem,
+  KnowledgeDocument,
   Topic,
-  ContentPackage
+  ContentPackage,
+  ContentProject
 } from '../types';
 
 const BASE_URL = '/api';
@@ -245,32 +251,51 @@ export const api = {
     return handleResponse(res);
   },
 
-  async getPlatformLoginStatus(platform: string, id: string): Promise<{ success: boolean; status: string; isLoggedIn?: boolean; nickname?: string; avatarUrl?: string; cookieNames?: string[]; errorMessage?: string }> {
+  async getPlatformLoginStatus(platform: string, id: string): Promise<{ success: boolean; status: string; isLoggedIn?: boolean; nickname?: string; avatarUrl?: string; cookieNames?: string[]; errorMessage?: string; account?: Account }> {
     const res = await authFetch(`${BASE_URL}/accounts/platform/${encodeURIComponent(platform)}/${encodeURIComponent(id)}/login/status`);
     return handleResponse(res);
   },
 
-  async getCreators(): Promise<CreatorPersona[]> {
+  async getCreators(): Promise<Creator[]> {
     const res = await authFetch(`${BASE_URL}/creators`);
-    return handleResponse<CreatorPersona[]>(res);
+    return handleResponse<Creator[]>(res);
   },
 
-  async createCreator(data: Omit<CreatorPersona, 'id'>): Promise<CreatorPersona> {
+  async getCreatorOpsSummaries(): Promise<CreatorOpsSummary[]> {
+    const res = await authFetch(`${BASE_URL}/creators/ops-summary`);
+    return handleResponse<CreatorOpsSummary[]>(res);
+  },
+
+  async getCreatorPlans(creatorId: string): Promise<CreatorPlan[]> {
+    const res = await authFetch(`${BASE_URL}/creators/${encodeURIComponent(creatorId)}/plans`);
+    return handleResponse<CreatorPlan[]>(res);
+  },
+
+  async saveCreatorPlan(creatorId: string, data: Partial<CreatorPlan> & Pick<CreatorPlan, 'dailyTarget' | 'productionMode'>): Promise<CreatorPlan> {
+    const res = await authFetch(`${BASE_URL}/creators/${encodeURIComponent(creatorId)}/plans`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<CreatorPlan>(res);
+  },
+
+  async createCreator(data: CreatorInput): Promise<Creator> {
     const res = await authFetch(`${BASE_URL}/creators`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    return handleResponse<CreatorPersona>(res);
+    return handleResponse<Creator>(res);
   },
 
-  async updateCreator(id: string, data: Partial<CreatorPersona>): Promise<CreatorPersona> {
+  async updateCreator(id: string, data: Partial<CreatorInput> & { status?: Creator['status'] }): Promise<Creator> {
     const res = await authFetch(`${BASE_URL}/creators/${encodeURIComponent(id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    return handleResponse<CreatorPersona>(res);
+    return handleResponse<Creator>(res);
   },
 
   async deleteCreator(id: string): Promise<{ success: boolean }> {
@@ -320,6 +345,26 @@ export const api = {
     const res = await authFetch(`${BASE_URL}/memory/items/${encodeURIComponent(id)}`, {
       method: 'DELETE'
     });
+    return handleResponse<{ success: boolean }>(res);
+  },
+
+  async getKnowledgeDocuments(creatorId?: string): Promise<KnowledgeDocument[]> {
+    const query = creatorId ? `?creatorId=${encodeURIComponent(creatorId)}` : '';
+    const res = await authFetch(`${BASE_URL}/knowledge/documents${query}`);
+    return handleResponse<KnowledgeDocument[]>(res);
+  },
+
+  async createKnowledgeDocument(data: Pick<KnowledgeDocument, 'name' | 'content'> & Partial<Pick<KnowledgeDocument, 'creatorId' | 'sourceType' | 'sourceUrl' | 'mimeType'>>): Promise<KnowledgeDocument> {
+    const res = await authFetch(`${BASE_URL}/knowledge/documents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<KnowledgeDocument>(res);
+  },
+
+  async deleteKnowledgeDocument(id: string): Promise<{ success: boolean }> {
+    const res = await authFetch(`${BASE_URL}/knowledge/documents/${encodeURIComponent(id)}`, { method: 'DELETE' });
     return handleResponse<{ success: boolean }>(res);
   },
 
@@ -673,6 +718,21 @@ export const api = {
   },
 
   // Content Project AI Workflow
+  async listContentProjects(params?: { creatorId?: string }): Promise<{ code: number; data: { items: ContentProject[]; total: number } }> {
+    const query = new URLSearchParams(params as Record<string, string>).toString();
+    const res = await authFetch(`${BASE_URL}/content-projects${query ? `?${query}` : ''}`);
+    return handleResponse(res);
+  },
+
+  async createContentProject(payload: { creatorId: string; title: string; contentType?: string; topicId?: string; seriesId?: string }): Promise<{ code: number; data: ContentProject }> {
+    const res = await authFetch(`${BASE_URL}/content-projects`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse(res);
+  },
+
   async generateMasterContent(payload: { creatorId: string; topicTitle: string; angle?: string; contentType?: string }): Promise<{ code: number; data: { projectId: string; masterContent: any } }> {
     const res = await authFetch(`${BASE_URL}/content-projects/generate-master`, {
       method: 'POST',
@@ -695,4 +755,3 @@ export const api = {
     return handleResponse(res);
   }
 };
-

@@ -10,9 +10,11 @@ import (
 	"zhiyu-backend/internal/asset"
 	"zhiyu-backend/internal/calendar"
 	"zhiyu-backend/internal/config"
+	creatorapp "zhiyu-backend/internal/creator"
 	"zhiyu-backend/internal/credit"
 	"zhiyu-backend/internal/delivery/http/handler"
 	"zhiyu-backend/internal/delivery/http/router"
+	"zhiyu-backend/internal/knowledge"
 	"zhiyu-backend/internal/learning"
 	"zhiyu-backend/internal/platformcontent/adapter"
 	"zhiyu-backend/internal/prompt"
@@ -69,9 +71,27 @@ func main() {
 	topicRepo := mysql.NewTopicRepository(db)
 	contentPackageRepo := mysql.NewContentPackageRepository(db)
 	contentProjectRepo := mysql.NewContentProjectRepository(db)
+	creatorRepo := mysql.NewCreatorRepository(db)
+	knowledgeRepo := mysql.NewKnowledgeRepository(db)
 
 	// 7. Initialize AI Infrastructure & Platform Adapters & Async Queue
 	aiGateway := aigateway.NewAIGateway()
+	if baseURL, model := os.Getenv("AI_BASE_URL"), os.Getenv("AI_MODEL"); baseURL != "" && model != "" {
+		providerName := os.Getenv("AI_PROVIDER")
+		if providerName == "" {
+			providerName = "openai-compatible"
+		}
+		aiGateway.RegisterProvider(providerName, aigateway.NewOpenAICompatibleProvider(aigateway.OpenAICompatibleConfig{
+			Name:         providerName,
+			BaseURL:      baseURL,
+			APIKey:       os.Getenv("AI_API_KEY"),
+			DefaultModel: model,
+			TimeoutSec:   90,
+		}), true)
+		log.Infof("AI Gateway provider registered: %s / %s", providerName, model)
+	} else {
+		log.Warn("AI Gateway is not configured; AI generation endpoints will return an explicit error")
+	}
 	promptService := prompt.NewPromptService(db)
 	adapterRegistry := adapter.NewAdapterRegistry()
 	jobQueue := queue.NewJobQueue()
@@ -87,6 +107,8 @@ func main() {
 	creditService := credit.NewCreditService(db)
 	assetService := asset.NewAssetService(db)
 	learningService := learning.NewLearningService(db, aiGateway)
+	creatorService := creatorapp.NewService(creatorRepo, nil)
+	knowledgeService := knowledge.NewService(knowledgeRepo, nil)
 
 	// 9. Initialize Handlers (Delivery Layer)
 	handlers := &router.Handlers{
@@ -95,14 +117,16 @@ func main() {
 		Account:        handler.NewAccountHandler(accService, workerClient),
 		Publish:        handler.NewPublishHandler(pubService),
 		Memory:         handler.NewMemoryHandler(memRepo),
+		Creator:        handler.NewCreatorHandler(creatorService),
 		Topic:          handler.NewTopicHandler(topicRepo),
 		ContentPackage: handler.NewContentPackageHandler(contentPackageRepo),
-		ContentProject: handler.NewContentProjectHandler(contentProjectService),
+		ContentProject: handler.NewContentProjectHandler(contentProjectService, creatorService),
 		Calendar:       handler.NewCalendarHandler(calendarService),
 		Job:            handler.NewJobHandler(jobQueue),
 		Credit:         handler.NewCreditHandler(creditService),
 		Asset:          handler.NewAssetHandler(assetService),
 		Learning:       handler.NewLearningHandler(learningService),
+		Knowledge:      handler.NewKnowledgeHandler(knowledgeService),
 		SocialUpload:   handler.NewSocialUploadHandler(accService),
 		Settings:       handler.NewSettingsHandler(cfg, workerClient),
 	}

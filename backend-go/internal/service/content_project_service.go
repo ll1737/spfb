@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"zhiyu-backend/internal/aigateway"
@@ -15,10 +16,109 @@ import (
 )
 
 type ContentProjectService struct {
-	repo          *mysql.ContentProjectRepository
-	gateway       *aigateway.AIGateway
-	promptSvc     *prompt.PromptService
-	adapters      *adapter.AdapterRegistry
+	repo      *mysql.ContentProjectRepository
+	gateway   *aigateway.AIGateway
+	promptSvc *prompt.PromptService
+	adapters  *adapter.AdapterRegistry
+}
+
+type CreateContentProjectInput struct {
+	TopicID     string `json:"topicId"`
+	SeriesID    string `json:"seriesId"`
+	Title       string `json:"title"`
+	ContentType string `json:"contentType"`
+}
+
+type AIReviewResult struct {
+	OverallScore    int      `json:"overallScore"`
+	PersonaScore    int      `json:"personaScore"`
+	BrandScore      int      `json:"brandScore"`
+	ComplianceScore int      `json:"complianceScore"`
+	PlatformScore   int      `json:"platformScore"`
+	Passed          bool     `json:"passed"`
+	Risks           []string `json:"risks"`
+	Suggestions     []string `json:"suggestions"`
+}
+
+func ParseGeneratedTopics(content string) ([]domain.Topic, error) {
+	var rawTopics []struct {
+		Title     string   `json:"title"`
+		Angle     string   `json:"angle"`
+		HeatScore int      `json:"heatScore"`
+		Tags      []string `json:"tags"`
+		Reason    string   `json:"reason"`
+	}
+	if err := json.Unmarshal([]byte(content), &rawTopics); err != nil {
+		return nil, fmt.Errorf("AI 选题输出不是有效 JSON: %w", err)
+	}
+	if len(rawTopics) == 0 {
+		return nil, fmt.Errorf("AI 未返回任何选题")
+	}
+	now := time.Now()
+	result := make([]domain.Topic, 0, len(rawTopics))
+	for _, row := range rawTopics {
+		if strings.TrimSpace(row.Title) == "" {
+			return nil, fmt.Errorf("AI 选题缺少标题")
+		}
+		angles := make([]string, 0, 1)
+		if strings.TrimSpace(row.Angle) != "" {
+			angles = append(angles, row.Angle)
+		}
+		result = append(result, domain.Topic{
+			ID:        idgen.GenerateUUID(),
+			Title:     strings.TrimSpace(row.Title),
+			HeatScore: row.HeatScore,
+			Tags:      row.Tags,
+			Angles:    angles,
+			Status:    "recommended",
+			CreatedAt: now,
+			UpdatedAt: now,
+		})
+	}
+	return result, nil
+}
+
+func ParseAIReview(content string) (*AIReviewResult, error) {
+	var result AIReviewResult
+	if err := json.Unmarshal([]byte(content), &result); err != nil {
+		return nil, fmt.Errorf("AI 审核输出不是有效 JSON: %w", err)
+	}
+	if result.OverallScore < 0 || result.OverallScore > 100 {
+		return nil, fmt.Errorf("AI 审核总分不在有效范围")
+	}
+	return &result, nil
+}
+
+func NewContentProject(tenantID, brandID, creatorID, userID string, input CreateContentProjectInput) (*domain.ContentProject, error) {
+	if strings.TrimSpace(tenantID) == "" {
+		return nil, fmt.Errorf("企业空间未初始化")
+	}
+	if strings.TrimSpace(creatorID) == "" {
+		return nil, fmt.Errorf("必须选择 Creator")
+	}
+	if strings.TrimSpace(input.Title) == "" {
+		return nil, fmt.Errorf("内容项目标题不能为空")
+	}
+	contentType := input.ContentType
+	if contentType == "" {
+		contentType = "article"
+	}
+	now := time.Now()
+	return &domain.ContentProject{
+		ID:          idgen.GenerateUUID(),
+		TenantID:    tenantID,
+		BrandID:     brandID,
+		CreatorID:   creatorID,
+		TopicID:     input.TopicID,
+		SeriesID:    input.SeriesID,
+		Title:       strings.TrimSpace(input.Title),
+		ContentType: contentType,
+		Status:      domain.ProjectStatusDraft,
+		CurrentStep: "init",
+		CreatedBy:   userID,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}, nil
 }
 
 func NewContentProjectService(
@@ -33,6 +133,31 @@ func NewContentProjectService(
 		promptSvc: promptSvc,
 		adapters:  adapters,
 	}
+}
+
+func (s *ContentProjectService) CreateProject(ctx context.Context, tenantID, brandID, creatorID, userID string, input CreateContentProjectInput) (*domain.ContentProject, error) {
+	project, err := NewContentProject(tenantID, brandID, creatorID, userID, input)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.repo.CreateProject(ctx, project); err != nil {
+		return nil, err
+	}
+	return project, nil
+}
+
+func (s *ContentProjectService) ListProjects(ctx context.Context, tenantID, creatorID string, limit, offset int) ([]domain.ContentProject, int64, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return s.repo.ListProjects(ctx, tenantID, creatorID, limit, offset)
+}
+
+func (s *ContentProjectService) GetProject(ctx context.Context, tenantID, projectID string) (*domain.ContentProject, error) {
+	return s.repo.GetProjectByID(ctx, tenantID, projectID)
 }
 
 // GenerateTopics generates candidate topics for a creator using AI Gateway
@@ -71,41 +196,12 @@ func (s *ContentProjectService) GenerateTopics(ctx context.Context, tenantID str
 		return nil, fmt.Errorf("ai gateway topic generation failed: %w", err)
 	}
 
-	// Parse JSON array of topics
-	var rawTopics []struct {
-		Title     string   `json:"title"`
-		Angle     string   `json:"angle"`
-		HeatScore int      `json:"heatScore"`
-		Tags      []string `json:"tags"`
-		Reason    string   `json:"reason"`
+	result, err := ParseGeneratedTopics(resp.Content)
+	if err != nil {
+		return nil, err
 	}
-
-	if err := json.Unmarshal([]byte(resp.Content), &rawTopics); err != nil {
-		// Fallback: create single topic with raw content if JSON parse fails
-		return []domain.Topic{
-			{
-				ID:        idgen.GenerateUUID(),
-				Title:     aiCtx.CreatorName + " 专业分享",
-				Category:  aiCtx.Profession,
-				HeatScore: 88,
-				Tags:      []string{aiCtx.Profession, "专业干货"},
-				Status:    "recommended",
-				CreatedAt: time.Now(),
-			},
-		}, nil
-	}
-
-	var result []domain.Topic
-	for _, rt := range rawTopics {
-		result = append(result, domain.Topic{
-			ID:        idgen.GenerateUUID(),
-			Title:     rt.Title,
-			Category:  aiCtx.Profession,
-			HeatScore: rt.HeatScore,
-			Tags:      rt.Tags,
-			Status:    "recommended",
-			CreatedAt: time.Now(),
-		})
+	for i := range result {
+		result[i].Category = aiCtx.Profession
 	}
 	return result, nil
 }
@@ -264,44 +360,30 @@ func (s *ContentProjectService) PerformAIReview(ctx context.Context, tenantID, p
 		return nil, fmt.Errorf("ai gateway review failed: %w", err)
 	}
 
+	parsed, err := ParseAIReview(resp.Content)
+	if err != nil {
+		return nil, err
+	}
+	status := "passed"
+	if !parsed.Passed || parsed.OverallScore < 60 {
+		status = "rejected"
+	}
+	risksBytes, _ := json.Marshal(parsed.Risks)
+	suggBytes, _ := json.Marshal(parsed.Suggestions)
 	rev := &domain.ContentReview{
 		ID:               idgen.GenerateUUID(),
 		TenantID:         tenantID,
 		ContentProjectID: projectID,
 		ReviewerType:     "ai",
-		Status:           "passed",
-		OverallScore:     92,
-		PersonaScore:     90,
-		BrandScore:       90,
-		ComplianceScore:  95,
-		PlatformScore:    92,
+		Status:           status,
+		OverallScore:     parsed.OverallScore,
+		PersonaScore:     parsed.PersonaScore,
+		BrandScore:       parsed.BrandScore,
+		ComplianceScore:  parsed.ComplianceScore,
+		PlatformScore:    parsed.PlatformScore,
+		RisksJSON:        string(risksBytes),
+		SuggestionsJSON:  string(suggBytes),
 		CreatedAt:        time.Now(),
-	}
-
-	var parsed struct {
-		OverallScore    int      `json:"overallScore"`
-		PersonaScore    int      `json:"personaScore"`
-		BrandScore      int      `json:"brandScore"`
-		ComplianceScore int      `json:"complianceScore"`
-		PlatformScore   int      `json:"platformScore"`
-		Passed          bool     `json:"passed"`
-		Risks           []string `json:"risks"`
-		Suggestions     []string `json:"suggestions"`
-	}
-
-	if err := json.Unmarshal([]byte(resp.Content), &parsed); err == nil {
-		rev.OverallScore = parsed.OverallScore
-		rev.PersonaScore = parsed.PersonaScore
-		rev.BrandScore = parsed.BrandScore
-		rev.ComplianceScore = parsed.ComplianceScore
-		rev.PlatformScore = parsed.PlatformScore
-		if !parsed.Passed || rev.OverallScore < 60 {
-			rev.Status = "rejected"
-		}
-		risksBytes, _ := json.Marshal(parsed.Risks)
-		suggBytes, _ := json.Marshal(parsed.Suggestions)
-		rev.RisksJSON = string(risksBytes)
-		rev.SuggestionsJSON = string(suggBytes)
 	}
 
 	if err := s.repo.SaveReview(ctx, rev); err != nil {

@@ -15,9 +15,9 @@ type Creator struct {
 	Industry        string    `gorm:"size:64" json:"industry"`
 	Profession      string    `gorm:"size:64" json:"profession"`
 	Intro           string    `gorm:"type:text" json:"intro"`
-	Status          string    `gorm:"size:32;default:'active'" json:"status"` // active | paused | archived
+	Status          string    `gorm:"size:32;default:'active'" json:"status"`         // active | paused | archived
 	ProductionMode  string    `gorm:"size:32;default:'manual'" json:"productionMode"` // auto | semi_auto | manual
-	DailyTarget     int       `gorm:"default:2" json:"dailyTarget"` // number of posts per day
+	DailyTarget     int       `gorm:"default:2" json:"dailyTarget"`                   // number of posts per day
 	DefaultTimezone string    `gorm:"size:64;default:'Asia/Shanghai'" json:"defaultTimezone"`
 	CreatedBy       string    `gorm:"size:64" json:"createdBy"`
 	CreatedAt       time.Time `json:"createdAt"`
@@ -53,21 +53,22 @@ type CreatorPlanPlatform struct {
 	AccountID        string    `gorm:"size:64;not null" json:"accountId"`
 	DailyCount       int       `gorm:"default:1" json:"dailyCount"`
 	PublishTimesJSON string    `gorm:"type:text" json:"publishTimesJson"` // e.g. ["10:00", "18:00"]
+	PublishTimes     []string  `gorm:"-" json:"publishTimes"`
 	CreatedAt        time.Time `json:"createdAt"`
 	UpdatedAt        time.Time `json:"updatedAt"`
 }
 
 // CreatorAIContext is the fully assembled context injected into AI prompts
 type CreatorAIContext struct {
-	CreatorID             string            `json:"creatorId"`
-	CreatorName           string            `json:"creatorName"`
-	Profession            string            `json:"profession"`
-	ToneStyle             string            `json:"toneStyle"`
-	SystemPrompt          string            `json:"systemPrompt"`
-	ProhibitedExpressions []string          `json:"prohibitedExpressions,omitempty"`
-	PreferredExpressions  []string          `json:"preferredExpressions,omitempty"`
-	CoreMemories          []string          `json:"coreMemories,omitempty"`
-	PerformanceInsights   []string          `json:"performanceInsights,omitempty"`
-	BrandRules            string            `json:"brandRules,omitempty"`
-	KnowledgeSnippets     []string          `json:"knowledgeSnippets,omitempty"`
+	CreatorID             string   `json:"creatorId"`
+	CreatorName           string   `json:"creatorName"`
+	Profession            string   `json:"profession"`
+	ToneStyle             string   `json:"toneStyle"`
+	SystemPrompt          string   `json:"systemPrompt"`
+	ProhibitedExpressions []string `json:"prohibitedExpressions,omitempty"`
+	PreferredExpressions  []string `json:"preferredExpressions,omitempty"`
+	CoreMemories          []string `json:"coreMemories,omitempty"`
+	PerformanceInsights   []string `json:"performanceInsights,omitempty"`
+	BrandRules            string   `json:"brandRules,omitempty"`
+	KnowledgeSnippets     []string `json:"knowledgeSnippets,omitempty"`
 }

@@ -233,18 +233,23 @@ func (h *AccountHandler) GetPlatformLoginStatus(c *gin.Context) {
 
 	// When scan login succeeds, update existing account or persist with matching accID (ensuring database Account.ID == Worker Profile ID)
 	if isLoggedIn, ok := result["isLoggedIn"].(bool); ok && isLoggedIn {
+		encSession, credentialErr := service.ExtractWorkerSession(result)
+		if credentialErr != nil {
+			result["success"] = false
+			result["isLoggedIn"] = false
+			result["errorMessage"] = credentialErr.Error()
+			c.JSON(http.StatusOK, result)
+			return
+		}
 		nickname, _ := result["nickname"].(string)
 		if nickname == "" {
-			nickname = fmt.Sprintf("%s创作者_%s", platform, accID)
+			result["success"] = false
+			result["isLoggedIn"] = false
+			result["errorMessage"] = "平台未返回真实账号昵称，请重新扫码"
+			c.JSON(http.StatusOK, result)
+			return
 		}
 		avatarURL, _ := result["avatarUrl"].(string)
-		if avatarURL == "" {
-			avatarURL = fmt.Sprintf("https://api.dicebear.com/7.x/identicon/svg?seed=%s", nickname)
-		}
-		encSession, _ := result["encryptedSession"].(string)
-		if encSession == "" {
-			encSession = fmt.Sprintf("session_token_%s_%s", platform, accID)
-		}
 
 		// 1. Check if account already exists in DB
 		existingAcc, _ := h.accService.GetAccount(accID)
@@ -319,7 +324,7 @@ func (h *AccountHandler) ConfirmLoginSession(c *gin.Context) {
 	}
 
 	encryptedSession := ""
-	avatarURL := fmt.Sprintf("https://api.dicebear.com/7.x/identicon/svg?seed=%s", finalNickname)
+	avatarURL := ""
 
 	loginState, err := h.accService.GetQRLoginStatus(c.Request.Context(), c.Param("id"))
 	if err == nil && loginState != nil {
@@ -337,13 +342,17 @@ func (h *AccountHandler) ConfirmLoginSession(c *gin.Context) {
 		}
 	}
 
-	if finalNickname == "" {
-		response.Error(c, http.StatusBadRequest, "请输入账号真实昵称以完成录入")
+	if loginState == nil || loginState.Status != "confirmed" {
+		response.Error(c, http.StatusBadRequest, "平台账号尚未完成扫码确认")
 		return
 	}
-
+	if finalNickname == "" {
+		response.Error(c, http.StatusBadRequest, "平台未返回真实账号昵称，请重新扫码")
+		return
+	}
 	if encryptedSession == "" {
-		encryptedSession = fmt.Sprintf("session_token_%s_%d", body.Platform, time.Now().Unix())
+		response.Error(c, http.StatusBadRequest, "平台未返回有效登录凭证，请完成扫码后重试")
+		return
 	}
 
 	newAcc := &domain.Account{
@@ -352,7 +361,7 @@ func (h *AccountHandler) ConfirmLoginSession(c *gin.Context) {
 		Name:             finalNickname,
 		Group:            finalGroup,
 		EncryptedSession: encryptedSession,
-		SessionPreview:   "扫码授权凭据 (AES-256 已加密)",
+		SessionPreview:   "扫码授权凭证",
 		AvatarURL:        avatarURL,
 		Status:           "active",
 	}

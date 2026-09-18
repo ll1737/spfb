@@ -1,12 +1,18 @@
 import React from 'react';
 import {
+  LayoutDashboard,
   Users2,
   Sparkles,
   PenTool,
-  LayoutGrid,
-  GitFork,
+  Package,
+  Image,
+  Video,
+  ListTree,
+  Library,
   FolderKanban,
   Brain,
+  BookOpen,
+  GraduationCap,
   Calendar,
   Send,
   BarChart3,
@@ -16,11 +22,13 @@ import {
   Settings,
   Layers
 } from 'lucide-react';
+import { AppRouteId } from '../appRoutes';
+import { PRODUCT_NAVIGATION } from '../navigation';
 import { User } from '../types';
 
 interface SidebarProps {
-  activeTab: string;
-  onSelectTab: (tab: string) => void;
+  activeTab: AppRouteId | 'settings';
+  onSelectTab: (tab: AppRouteId | 'settings') => void;
   activeAccountsCount: number;
   totalAccountsCount: number;
   pendingTasksCount: number;
@@ -28,18 +36,29 @@ interface SidebarProps {
   onOpenProfile?: () => void;
 }
 
-interface NavItem {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  badge?: string | null;
-  badgeColor?: string;
-}
-
-interface NavSection {
-  title: string;
-  items: NavItem[];
-}
+const ICONS: Record<AppRouteId, React.ElementType> = {
+  workspace: LayoutDashboard,
+  creators: Users2,
+  'creator-workspace': Users2,
+  topics: Sparkles,
+  'content-pack': Package,
+  studio: PenTool,
+  images: Image,
+  videos: Video,
+  series: ListTree,
+  contents: Library,
+  assets: FolderKanban,
+  calendar: Calendar,
+  publish: Send,
+  analytics: BarChart3,
+  knowledge: BookOpen,
+  memory: Brain,
+  learning: GraduationCap,
+  accounts: Share2,
+  enterprise: Building2,
+  billing: CreditCard,
+  onboarding: Sparkles
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
@@ -50,62 +69,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentUser,
   onOpenProfile
 }) => {
-  const navSections: NavSection[] = [
-    {
-      title: 'AI 内容创作',
-      items: [
-        { id: 'creators', label: 'AI 创作者', icon: Users2 },
-        { id: 'topics', label: '选题池', icon: Sparkles },
-        { id: 'editor', label: '文案创作', icon: PenTool },
-        { id: 'content_packages', label: '内容中心', icon: LayoutGrid },
-        { id: 'workflow', label: '自动化工作流', icon: GitFork }
-      ]
-    },
-    {
-      title: '内容资产',
-      items: [
-        { id: 'assets', label: '素材中心', icon: FolderKanban },
-        { id: 'memory', label: '知识与记忆', icon: Brain }
-      ]
-    },
-    {
-      title: '矩阵运营',
-      items: [
-        { id: 'calendar', label: '内容日历', icon: Calendar },
-        {
-          id: 'tasks',
-          label: '发布中心',
-          icon: Send,
-          badge: pendingTasksCount > 0 ? `${pendingTasksCount}` : null,
-          badgeColor: 'bg-indigo-500 text-white'
-        },
-        { id: 'analytics', label: '数据分析', icon: BarChart3 }
-      ]
-    },
-    {
-      title: '账号与组织',
-      items: [
-        {
-          id: 'accounts',
-          label: '平台账号',
-          icon: Share2,
-          badge: `${activeAccountsCount}/${totalAccountsCount}`,
-          badgeColor:
-            activeAccountsCount > 0
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-              : 'bg-slate-700/40 text-slate-400'
-        },
-        { id: 'enterprise', label: '企业与团队', icon: Building2 },
-        { id: 'plans', label: '套餐与用量', icon: CreditCard }
-      ]
-    },
-    {
-      title: '系统',
-      items: [
-        { id: 'settings', label: '系统与 Worker', icon: Settings }
-      ]
-    }
-  ];
+  const getBadge = (id: AppRouteId) => {
+    if (id === 'publish' && pendingTasksCount > 0) return `${pendingTasksCount}`;
+    if (id === 'accounts') return `${activeAccountsCount}/${totalAccountsCount}`;
+    return null;
+  };
 
   return (
     <aside
@@ -131,14 +99,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation Sections */}
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
-        {navSections.map((section) => (
+        {PRODUCT_NAVIGATION.map((section) => (
           <div key={section.title} className="space-y-0.5">
             <div className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-[#77829f]">
               {section.title}
             </div>
             {section.items.map((item) => {
-              const Icon = item.icon;
+              const Icon = ICONS[item.id];
               const isActive = activeTab === item.id;
+              const badge = getBadge(item.id);
               return (
                 <button
                   key={item.id}
@@ -163,21 +132,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className="truncate">{item.label}</span>
                   </div>
 
-                  {item.badge && (
+                  <div className="flex items-center gap-1.5">
+                  {item.beta && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-white/10 text-[#aeb7cd]">Beta</span>
+                  )}
+                  {badge && (
                     <span
-                      className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-md ${
-                        item.badgeColor || 'bg-white/10 text-white'
-                      }`}
+                      className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-md ${item.id === 'accounts' && activeAccountsCount === 0 ? 'bg-slate-700/40 text-slate-400' : 'bg-indigo-500/20 text-indigo-200 border border-indigo-400/20'}`}
                     >
-                      {item.badge}
+                      {badge}
                     </span>
                   )}
+                  </div>
                 </button>
               );
             })}
           </div>
         ))}
       </nav>
+
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => onSelectTab('settings')}
+          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${activeTab === 'settings' ? 'text-white bg-white/10' : 'text-[#929db8] hover:text-white hover:bg-white/[0.06]'}`}
+        >
+          <Settings className="w-4 h-4" />
+          系统设置
+        </button>
+      </div>
 
       {/* Current User Card */}
       <div className="p-3 pt-2 border-t border-white/[0.06]">

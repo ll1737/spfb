@@ -99,6 +99,8 @@ func InitMySQL(cfg config.MySQLConfig) (*gorm.DB, error) {
 			&domain.Asset{},
 			&domain.ContentMetricSnapshot{},
 			&domain.PerformanceInsight{},
+			&domain.KnowledgeDocument{},
+			&domain.KnowledgeChunk{},
 			&domain.AuditLog{},
 		)
 		if err != nil {

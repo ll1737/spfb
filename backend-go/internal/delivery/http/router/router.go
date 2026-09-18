@@ -16,6 +16,7 @@ type Handlers struct {
 	Account        *handler.AccountHandler
 	Publish        *handler.PublishHandler
 	Memory         *handler.MemoryHandler
+	Creator        *handler.CreatorHandler
 	Topic          *handler.TopicHandler
 	ContentPackage *handler.ContentPackageHandler
 	ContentProject *handler.ContentProjectHandler
@@ -24,6 +25,7 @@ type Handlers struct {
 	Credit         *handler.CreditHandler
 	Asset          *handler.AssetHandler
 	Learning       *handler.LearningHandler
+	Knowledge      *handler.KnowledgeHandler
 	SocialUpload   *handler.SocialUploadHandler
 	Settings       *handler.SettingsHandler
 }
@@ -113,11 +115,21 @@ func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
 			authGroup.POST("/tasks/:id/retry", h.Publish.RetryTask)
 			authGroup.POST("/tasks/:id/cancel", h.Publish.CancelTask)
 
-			// Creators & Memory
-			authGroup.GET("/creators", h.Memory.ListCreators)
-			authGroup.POST("/creators", h.Memory.CreateCreator)
-			authGroup.PUT("/creators/:id", h.Memory.UpdateCreator)
-			authGroup.DELETE("/creators/:id", h.Memory.DeleteCreator)
+			// Creator aggregate (Creator + Persona + Plan)
+			authGroup.GET("/creators", h.Creator.List)
+			authGroup.POST("/creators", h.Creator.Create)
+			authGroup.GET("/creators/ops-summary", h.Creator.ListOpsSummary)
+			authGroup.GET("/creators/:id", h.Creator.Get)
+			authGroup.PUT("/creators/:id", h.Creator.Update)
+			authGroup.DELETE("/creators/:id", h.Creator.Delete)
+			authGroup.GET("/creators/:id/plans", h.Creator.ListPlans)
+			authGroup.PUT("/creators/:id/plans", h.Creator.SavePlan)
+
+			// Legacy Persona compatibility API. New product pages must not use it.
+			authGroup.GET("/creator-personas", h.Memory.ListCreators)
+			authGroup.POST("/creator-personas", h.Memory.CreateCreator)
+			authGroup.PUT("/creator-personas/:id", h.Memory.UpdateCreator)
+			authGroup.DELETE("/creator-personas/:id", h.Memory.DeleteCreator)
 			authGroup.GET("/memory/categories", h.Memory.ListCategories)
 			authGroup.POST("/memory/categories", h.Memory.CreateCategory)
 			authGroup.DELETE("/memory/categories/:id", h.Memory.DeleteCategory)
@@ -137,7 +149,10 @@ func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
 
 			// Content Projects (SaaS AI Creator workflow)
 			if h.ContentProject != nil {
+				authGroup.GET("/content-projects", h.ContentProject.List)
+				authGroup.POST("/content-projects", h.ContentProject.Create)
 				authGroup.POST("/content-projects/generate-master", h.ContentProject.CreateAndGenerateMaster)
+				authGroup.GET("/content-projects/:id", h.ContentProject.Get)
 			}
 
 			// Content Calendar & Scheduling
@@ -169,6 +184,12 @@ func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
 				authGroup.POST("/analytics/snapshots", h.Learning.RecordSnapshot)
 				authGroup.GET("/learning/creators/:creatorId/insights", h.Learning.AnalyzeMetrics)
 				authGroup.POST("/learning/insights/:id/approve", h.Learning.ApproveInsight)
+			}
+
+			if h.Knowledge != nil {
+				authGroup.GET("/knowledge/documents", h.Knowledge.List)
+				authGroup.POST("/knowledge/documents", h.Knowledge.Create)
+				authGroup.DELETE("/knowledge/documents/:id", h.Knowledge.Delete)
 			}
 		}
 	}

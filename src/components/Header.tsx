@@ -37,31 +37,45 @@ export const Header: React.FC<HeaderProps> = ({
   const getBreadcrumbs = (tab: string) => {
     switch (tab) {
       case 'creators':
-        return { section: 'AI 内容创作', title: 'AI 创作者' };
+        return { section: '智能创作', title: 'AI内容生产者' };
+      case 'creator-workspace':
+        return { section: '智能创作', title: '创作者工作台' };
       case 'topics':
-        return { section: 'AI 内容创作', title: '选题池' };
-      case 'editor':
-        return { section: 'AI 内容创作', title: '文案创作' };
-      case 'content_packages':
-        return { section: 'AI 内容创作', title: '内容中心' };
-      case 'workflow':
-        return { section: 'AI 内容创作', title: '自动化工作流' };
+        return { section: '智能创作', title: 'AI选题' };
+      case 'studio':
+        return { section: '智能创作', title: '文案创作' };
+      case 'content-pack':
+        return { section: '智能创作', title: '智能内容包' };
+      case 'images':
+        return { section: '智能创作', title: 'AI 图片' };
+      case 'videos':
+        return { section: '智能创作', title: 'AI 视频' };
+      case 'series':
+        return { section: '智能创作', title: '内容系列' };
+      case 'contents':
+        return { section: '内容资产', title: '内容中心' };
       case 'assets':
         return { section: '内容资产', title: '素材中心' };
+      case 'knowledge':
+        return { section: '知识与记忆', title: '品牌知识库' };
       case 'memory':
-        return { section: '内容资产', title: '知识与记忆' };
+        return { section: '知识与记忆', title: 'AI记忆中心' };
+      case 'learning':
+        return { section: '知识与记忆', title: 'AI学习中心' };
       case 'calendar':
-        return { section: '矩阵运营', title: '内容日历' };
-      case 'tasks':
-        return { section: '矩阵运营', title: '发布中心' };
+        return { section: '内容运营', title: '内容日历' };
+      case 'publish':
+        return { section: '内容运营', title: '发布中心' };
       case 'analytics':
-        return { section: '矩阵运营', title: '数据分析' };
+        return { section: '内容运营', title: '数据分析' };
       case 'accounts':
         return { section: '管理与设置', title: '平台账号' };
       case 'enterprise':
         return { section: '管理与设置', title: '企业与团队' };
-      case 'plans':
+      case 'billing':
         return { section: '管理与设置', title: '套餐与用量' };
+      case 'workspace':
+        return { section: '概览', title: '工作台' };
       case 'settings':
         return { section: '系统', title: '系统与 Worker' };
       default:

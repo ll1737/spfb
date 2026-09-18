@@ -38,3 +38,9 @@
 - 重启当前项目 Go 后端，启动日志确认 Creator、Memory、Topic 路由已注册；健康检查返回 200，带无效令牌访问 Creator/Topic 均返回 401（路由存在且受保护）。
 - 继续执行内容生产阶段：新增 ContentPackage/MasterContent 的企业隔离 CRUD 和真实内容中心页面，移除原内容包内置演示内容；新增 Topic/ContentPackage/Creator/Memory 四类 API 的前端调用。
 - 最终验证：`npm run lint`、Node 8 项测试、`npm run build`（Vite + Go）、`go test ./...` 均通过；当前运行中的 Go 服务验证四类新 API 对无效令牌均返回 401。
+- 执行 V5 原型对齐：引入 React Router 和正式页面 URL，Sidebar 恢复原型信息架构，Workflow 不再作为一级入口；缺后端闭环的页面使用无演示数据的 Beta 页面壳。
+- Creator 已从 Persona 中拆出：新增 Creator 聚合 Repository/Service/Handler、Creator Matrix 运营摘要、七 Tab 工作台、CreatorPlan 真实保存与 Creator AI Context Builder。
+- ContentProject 已补齐创建/列表/详情，内容中心直接读取 ContentProject；智能内容包接入真实 AI Gateway。AI JSON 解析失败不再回退为假选题或固定审核分。
+- 新增独立品牌知识库 Domain/API/UI，和 AI Memory 页面正式分离。
+- 再次修复平台账号回归：Worker 未返回真实加密凭证或真实昵称时，不会新增账号；旧确认接口也不再生成 `session_token_*`。
+- V5 本批全量验证：TypeScript 检查通过，Node 12 项测试通过，Vite + Go 生产构建通过，Go 全包测试通过；运行时新增 API 路由返回 401 而非 404。

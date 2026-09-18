@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -11,26 +12,53 @@ import { AuthPage } from './components/AuthPage';
 import { CalendarView } from './components/CalendarView';
 import { CreatorsView } from './components/CreatorsView';
 import { TopicsView } from './components/TopicsView';
-import { ContentPackagesView } from './components/ContentPackagesView';
 import { AssetCenter } from './components/AssetCenter';
 import { MemoryCenter } from './components/MemoryCenter';
 import { PlansView } from './components/PlansView';
 import { AnalyticsView } from './components/AnalyticsView';
-import { WorkflowView } from './components/WorkflowView';
 import { EnterpriseView } from './components/EnterpriseView';
 import { UserProfileModal } from './components/UserProfileModal';
-import { Layers } from 'lucide-react';
+import { CreatorWorkspaceView } from './components/CreatorWorkspaceView';
+import { PrototypeModulePage } from './components/PrototypeModulePage';
+import { ContentCenterView } from './components/ContentCenterView';
+import { SmartContentPackView } from './components/SmartContentPackView';
+import { KnowledgeBaseView } from './components/KnowledgeBaseView';
+import { BookOpen, GraduationCap, Image as ImageIcon, Layers, ListTree, Sparkles as SparklesIcon, Video } from 'lucide-react';
 
 import { Account, PublishJob, PublishTask, SystemSettings, ContentPayload, User } from './types';
-import { INITIAL_ACCOUNTS, EMPTY_POST } from './data/defaultData';
+import { EMPTY_POST } from './data/defaultData';
 import { api, authStorage } from './lib/api';
+import { AppRouteId, getRouteById, getRouteIdFromPath } from './appRoutes';
 
 export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<User | null>(authStorage.getUser());
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
 
-  const [activeTab, setActiveTab] = useState<string>('accounts');
+  const activeTab: AppRouteId | 'settings' = location.pathname === '/settings' ? 'settings' : getRouteIdFromPath(location.pathname);
+
+  const setActiveTab = (tab: string) => {
+    const aliases: Record<string, AppRouteId | 'settings'> = {
+      dashboard: 'workspace',
+      editor: 'studio',
+      content_packages: 'content-pack',
+      tasks: 'publish',
+      plans: 'billing'
+    };
+    const routeId = aliases[tab] ?? tab;
+    if (routeId === 'settings') {
+      navigate('/settings');
+      return;
+    }
+    if (routeId === 'creator-workspace') {
+      navigate('/creators');
+      return;
+    }
+    const route = getRouteById(routeId);
+    navigate(route?.path ?? '/dashboard');
+  };
   const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [jobs, setJobs] = useState<PublishJob[]>([]);
@@ -252,137 +280,32 @@ export default function App() {
 
         {/* Dynamic Body */}
         <main className="flex-1 overflow-y-auto p-6 bg-[#f5f7fb]">
-          {activeTab === 'dashboard' && (
-            <Dashboard
-              accounts={accounts || []}
-              jobs={jobs || []}
-              tasks={tasks || []}
-              onNavigate={(tab) => setActiveTab(tab)}
-              onOpenPublish={() => setIsPublishModalOpen(true)}
-              onRefresh={loadData}
-              isRefreshing={isRefreshing}
-              workerConnected={workerConnected}
-              onSelectTopicForCreate={(topicTitle) => {
-                setContent((prev) => ({
-                  ...prev,
-                  title: topicTitle
-                }));
-                setActiveTab('editor');
-              }}
-            />
-          )}
-
-          {activeTab === 'creators' && (
-            <CreatorsView
-              onNavigateToEditor={(topicTitle) => {
-                if (topicTitle) {
-                  setContent((prev) => ({
-                    ...prev,
-                    title: topicTitle
-                  }));
-                }
-                setActiveTab('editor');
-              }}
-              onOpenPublish={() => setIsPublishModalOpen(true)}
-            />
-          )}
-
-          {activeTab === 'topics' && (
-            <TopicsView
-              onNavigateToEditor={(topicTitle) => {
-                setContent((prev) => ({
-                  ...prev,
-                  title: topicTitle
-                }));
-                setActiveTab('editor');
-              }}
-            />
-          )}
-
-          {activeTab === 'editor' && (
-            <ContentEditor
-              content={content}
-              onChange={setContent}
-              onOpenPublish={() => setIsPublishModalOpen(true)}
-            />
-          )}
-
-          {activeTab === 'calendar' && (
-            <CalendarView
-              tasks={tasks || []}
-              onSelectTask={() => setActiveTab('tasks')}
-            />
-          )}
-
-          {activeTab === 'tasks' && (
-            <TaskCenter
-              tasks={tasks || []}
-              onRefresh={loadData}
-            />
-          )}
-
-          {activeTab === 'accounts' && (
-            <AccountManager
-              accounts={accounts || []}
-              onRefresh={loadData}
-              onAccountAdded={handleAccountAdded}
-              onAccountDeleted={handleAccountDeleted}
-              onAccountUpdated={handleAccountUpdated}
-            />
-          )}
-
-          {activeTab === 'content_packages' && (
-            <ContentPackagesView
-              onNavigateToEditorWithContent={(payload) => {
-                setContent(payload);
-                setActiveTab('editor');
-              }}
-              onOpenPublish={() => setIsPublishModalOpen(true)}
-            />
-          )}
-
-          {activeTab === 'workflow' && <WorkflowView />}
-
-          {activeTab === 'assets' && (
-            <AssetCenter
-              onUseInEditor={(url) => {
-                setContent((prev) => ({
-                  ...prev,
-                  images: prev.images.includes(url) ? prev.images : [url, ...prev.images]
-                }));
-                setActiveTab('editor');
-                showToast('已成功将素材引入创作编辑器配图！');
-              }}
-            />
-          )}
-
-          {activeTab === 'memory' && <MemoryCenter />}
-
-          {activeTab === 'analytics' && <AnalyticsView />}
-
-          {activeTab === 'plans' && <PlansView />}
-
-          {activeTab === 'enterprise' && (
-            <EnterpriseView
-              onShowToast={showToast}
-              currentUserRole={currentUser?.role || 'owner'}
-              onBrandChanged={(b) => {
-                if (currentUser) {
-                  const updated = { ...currentUser, currentBrandId: b.id, currentBrandName: b.name };
-                  setCurrentUser(updated);
-                  authStorage.setUser(updated);
-                }
-              }}
-            />
-          )}
-
-          {activeTab === 'settings' && (
-            <SettingsView
-              settings={settings}
-              onUpdateSettings={handleUpdateSettings}
-              workerConnected={workerConnected}
-            />
-          )}
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard accounts={accounts || []} jobs={jobs || []} tasks={tasks || []} onNavigate={setActiveTab} onOpenPublish={() => setIsPublishModalOpen(true)} onRefresh={loadData} isRefreshing={isRefreshing} workerConnected={workerConnected} onSelectTopicForCreate={(topicTitle) => { setContent((prev) => ({ ...prev, title: topicTitle })); setActiveTab('studio'); }} />} />
+            <Route path="/creators" element={<CreatorsView onNavigateToEditor={(topicTitle) => { if (topicTitle) setContent((prev) => ({ ...prev, title: topicTitle })); setActiveTab('studio'); }} onOpenPublish={() => setIsPublishModalOpen(true)} onOpenWorkspace={(creatorId) => navigate(`/creators/${encodeURIComponent(creatorId)}`)} />} />
+            <Route path="/creators/:creatorId" element={<CreatorWorkspaceRoute onNavigate={setActiveTab} />} />
+            <Route path="/topics" element={<TopicsView onNavigateToEditor={(topicTitle) => { setContent((prev) => ({ ...prev, title: topicTitle })); setActiveTab('studio'); }} />} />
+            <Route path="/content-pack" element={<SmartContentPackView onOpenStudio={(payload) => { setContent(payload); setActiveTab('studio'); }} />} />
+            <Route path="/studio" element={<ContentEditor content={content} onChange={setContent} onOpenPublish={() => setIsPublishModalOpen(true)} />} />
+            <Route path="/ai-images" element={<PrototypeModulePage icon={ImageIcon} eyebrow="ContentProject Media" title="AI 图片" description="按 ContentProject 生成封面、知识卡片、正文配图与 CTA 视觉，并继承品牌视觉规则。" steps={['选择 ContentProject 与 Creator', '确定素材角色与平台比例', '计算生成成本', '保存结果到素材中心']} onPrimaryAction={() => setActiveTab('contents')} primaryActionLabel="选择内容项目" />} />
+            <Route path="/ai-videos" element={<PrototypeModulePage icon={Video} eyebrow="Storyboard Workflow" title="AI 视频" description="视频生产遵循脚本、分镜、成本确认和成片生成流程，不会第一次点击就产生高成本任务。" steps={['确认视频脚本', '生成并编辑分镜', '选择配音与镜头素材', '确认预计积分后生成']} onPrimaryAction={() => setActiveTab('content-pack')} primaryActionLabel="进入智能内容包" />} />
+            <Route path="/series" element={<PrototypeModulePage icon={ListTree} eyebrow="Content Series" title="内容系列" description="围绕同一 Creator 管理连续选题和 ContentProject，例如专题栏目、连载课程与长期问答。" steps={['创建系列目标', '规划期数与顺序', '关联选题和内容项目', '跟踪生产与发布进度']} />} />
+            <Route path="/contents" element={<ContentCenterView onOpenStudio={(project) => { setContent((previous) => ({ ...previous, title: project.title, content: project.masterContent?.body || previous.content })); setActiveTab('studio'); }} />} />
+            <Route path="/assets" element={<AssetCenter onUseInEditor={(url) => { setContent((prev) => ({ ...prev, images: prev.images.includes(url) ? prev.images : [url, ...prev.images] })); setActiveTab('studio'); showToast('已将素材加入文案创作'); }} />} />
+            <Route path="/calendar" element={<CalendarView tasks={tasks || []} onSelectTask={() => setActiveTab('publish')} />} />
+            <Route path="/publish" element={<TaskCenter tasks={tasks || []} onRefresh={loadData} />} />
+            <Route path="/analytics" element={<AnalyticsView />} />
+            <Route path="/knowledge" element={<KnowledgeBaseView />} />
+            <Route path="/memory" element={<MemoryCenter />} />
+            <Route path="/learning" element={<PrototypeModulePage icon={GraduationCap} eyebrow="Performance Insight" title="AI学习中心" description="把真实内容指标分析为可确认的洞察，确认后才写入 Creator Performance Memory。" steps={['同步真实平台指标', '生成 Performance Insight', '人工确认或驳回', '写入 Creator Memory']} onPrimaryAction={() => setActiveTab('analytics')} primaryActionLabel="查看数据分析" />} />
+            <Route path="/accounts" element={<AccountManager accounts={accounts || []} onRefresh={loadData} onAccountAdded={handleAccountAdded} onAccountDeleted={handleAccountDeleted} onAccountUpdated={handleAccountUpdated} />} />
+            <Route path="/enterprise" element={<EnterpriseView onShowToast={showToast} currentUserRole={currentUser?.role || 'owner'} onBrandChanged={(brand) => { const updated = { ...currentUser, currentBrandId: brand.id, currentBrandName: brand.name }; setCurrentUser(updated); authStorage.setUser(updated); }} />} />
+            <Route path="/billing" element={<PlansView />} />
+            <Route path="/onboarding" element={<PrototypeModulePage icon={SparklesIcon} eyebrow="5-Step Onboarding" title="新手引导" description="完成行业、内容身份、内容目标、平台和首位 AI Creator 的五步初始化。" steps={['选择行业', '设置内容身份', '确认内容目标', '选择运营平台', '创建首位 AI Creator']} />} />
+            <Route path="/settings" element={<SettingsView settings={settings} onUpdateSettings={handleUpdateSettings} workerConnected={workerConnected} />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </main>
       </div>
 
@@ -420,3 +343,8 @@ export default function App() {
     </div>
   );
 }
+
+const CreatorWorkspaceRoute: React.FC<{ onNavigate: (routeId: string) => void }> = ({ onNavigate }) => {
+  const { creatorId = '' } = useParams();
+  return <CreatorWorkspaceView creatorId={creatorId} onNavigate={onNavigate} />;
+};

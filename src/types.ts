@@ -96,6 +96,75 @@ export interface CreatorPersona {
   updatedAt?: string;
 }
 
+export interface Creator {
+  id: string;
+  tenantId: string;
+  brandId: string;
+  name: string;
+  avatar?: string;
+  type: 'expert' | 'influencer' | 'brand_spokesperson' | 'virtual_anchor';
+  industry?: string;
+  profession?: string;
+  intro?: string;
+  status: 'active' | 'paused' | 'archived';
+  productionMode: 'auto' | 'semi_auto' | 'manual';
+  dailyTarget: number;
+  defaultTimezone: string;
+  persona?: CreatorPersona;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreatorInput {
+  name: string;
+  avatar?: string;
+  type?: Creator['type'];
+  industry?: string;
+  profession?: string;
+  intro?: string;
+  productionMode?: Creator['productionMode'];
+  dailyTarget?: number;
+  defaultTimezone?: string;
+  persona?: Partial<CreatorPersona>;
+}
+
+export interface CreatorOpsSummary {
+  creator: Creator;
+  todayTasks: number;
+  tomorrowTarget: number;
+  preGeneratedTopics: number;
+  preProducedContent: number;
+  pendingReview: number;
+  scheduled: number;
+  published7d: number;
+  performanceDelta: number;
+  accountHealth: 'healthy' | 'warning' | 'expired' | 'unbound';
+}
+
+export interface CreatorPlanPlatform {
+  id?: number;
+  planId?: string;
+  platform: string;
+  accountId: string;
+  dailyCount: number;
+  publishTimes: string[];
+}
+
+export interface CreatorPlan {
+  id: string;
+  tenantId: string;
+  creatorId: string;
+  planType: 'daily' | 'weekly' | 'monthly';
+  startDate?: string;
+  endDate?: string;
+  dailyTarget: number;
+  productionMode: 'auto' | 'semi_auto' | 'manual';
+  status: 'active' | 'paused' | 'completed';
+  platforms: CreatorPlanPlatform[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface MemoryCategory {
   id: string;
   orgId?: string;
@@ -117,6 +186,21 @@ export interface MemoryItem {
   weight?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface KnowledgeDocument {
+  id: string;
+  tenantId: string;
+  brandId?: string;
+  creatorId?: string;
+  name: string;
+  sourceType: 'manual' | 'upload' | 'web';
+  sourceUrl?: string;
+  mimeType?: string;
+  content: string;
+  status: 'processing' | 'ready' | 'failed' | 'disabled';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Topic {
@@ -415,22 +499,6 @@ export interface AuthResponse {
   message?: string;
 }
 
-export interface LoginPayload {
-  encryptionKeySet: boolean;
-  browserHeadless: boolean;
-  browserPath?: string;
-  maxConcurrency: number;
-  autoRetryFailed: boolean;
-  maxRetries: number;
-  saveDebugScreenshots: boolean;
-  enableStealth?: boolean; // stealth.min.js anti-detection
-  usePatchright?: boolean; // Patchright stealth engine
-  humanTypingDelay?: boolean; // True user simulated delay
-  socialAutoUploadPath?: string; // social-auto-upload path or CLI bridge
-  isDesktopMode?: boolean;
-  llmGateway?: LLMGatewaySettings;
-}
-
 export interface LoginSessionResponse {
   sessionId: string;
   platform: PlatformId;
@@ -438,16 +506,6 @@ export interface LoginSessionResponse {
   status: 'waiting_scan' | 'scanned' | 'confirmed' | 'expired' | 'error';
   expiresInSeconds: number;
 }
-
-export type UserRole =
-  | 'owner'       // 企业所有者 / 超级管理员
-  | 'admin'       // 企业管理员
-  | 'asset_admin' // AI 资产 / 专家
-  | 'operator'    // 内容运营官
-  | 'publisher'   // 发布专员
-  | 'reviewer'    // 审核员
-  | 'creator'     // 创作者
-  | 'viewer';     // 观察员
 
 export interface EnterpriseInfo {
   id: string;
