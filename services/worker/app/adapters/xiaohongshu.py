@@ -47,6 +47,36 @@ class XiaohongshuAdapter(BasePlatformAdapter):
         self.active_sessions: Dict[str, Dict[str, Any]] = {}
         self._lock = asyncio.Lock()
 
+    async def _find_exact_qr_element(self, page: Page):
+        # 1. Switch to QR login mode by clicking corner toggle if in SMS/phone mode
+        for _ in range(3):
+            try:
+                corner = page.locator("img.css-wemwzq, .css-wemwzq, div[class*='corner']").first
+                if await corner.count() > 0 and await corner.is_visible():
+                    box = await corner.bounding_box()
+                    if box and box['width'] < 100:
+                        await corner.click()
+                        await page.wait_for_timeout(1500)
+                        break
+            except Exception:
+                await page.wait_for_timeout(500)
+
+        # 2. Look for the true QR element with width and height >= 120
+        for _ in range(6):
+            all_imgs = page.locator("img, canvas, .qrcode-img, div[class*='qrcode'] img")
+            count = await all_imgs.count()
+            for i in range(count):
+                el = all_imgs.nth(i)
+                try:
+                    box = await el.bounding_box()
+                    if box and 120 <= box['width'] <= 400 and 120 <= box['height'] <= 400 and box['y'] < 700:
+                        return el
+                except Exception:
+                    pass
+            await page.wait_for_timeout(1000)
+
+        return page.locator(".css-1lhmg90, img.qrcode, .qrcode-img, img[src*='data:image']").first
+
     async def start_login_session(self, account_id: str) -> Dict[str, Any]:
         async with self._lock:
             if account_id in self.active_sessions:
@@ -106,12 +136,15 @@ class XiaohongshuAdapter(BasePlatformAdapter):
             sess_info["status"] = STATUS_WAIT_QR
 
             await page.goto("https://creator.xiaohongshu.com/login", wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(2000)
 
-            qr_loc = page.locator(".qrcode-img, img.qrcode, .login-box img, .qrcode-box img, canvas, img[src*='data:image'], .login-container img").first
-            await qr_loc.wait_for(state="visible", timeout=15000)
-
-            qr_bytes = await qr_loc.screenshot()
-            sess_info["qr_code_b64"] = "data:image/png;base64," + base64.b64encode(qr_bytes).decode("utf-8")
+            qr_loc = await self._find_exact_qr_element(page)
+            if qr_loc:
+                await qr_loc.wait_for(state="visible", timeout=15000)
+                qr_bytes = await qr_loc.screenshot()
+                qr_b64 = "data:image/png;base64," + base64.b64encode(qr_bytes).decode("utf-8")
+                if len(qr_b64) > 3000:
+                    sess_info["qr_code_b64"] = qr_b64
             sess_info["status"] = STATUS_WAIT_SCAN
 
             return {
@@ -140,15 +173,24 @@ class XiaohongshuAdapter(BasePlatformAdapter):
 
         page: Page = sess["page"]
         try:
-            qr_loc = page.locator(".qrcode-img, img.qrcode, .login-box img, .qrcode-box img, canvas, img[src*='data:image'], .login-container img").first
-            if await qr_loc.count() > 0 and await qr_loc.is_visible():
-                qr_bytes = await qr_loc.screenshot()
-                qr_b64 = "data:image/png;base64," + base64.b64encode(qr_bytes).decode("utf-8")
-                sess["qr_code_b64"] = qr_b64
-                return {"success": True, "status": sess["status"], "qrCodeUrl": qr_b64}
-            elif sess.get("qr_code_b64"):
+            qr_loc = await self._find_exact_qr_element(page)
+            if qr_loc and await qr_loc.count() > 0 and await qr_loc.is_visible():
+                box = await qr_loc.bounding_box()
+                if box and box['width'] >= 120:
+                    qr_bytes = await qr_loc.screenshot()
+                    qr_b64 = "data:image/png;base64," + base64.b64encode(qr_bytes).decode("utf-8")
+                    sess["qr_code_b64"] = qr_b64
+                    return {"success": True, "status": sess["status"], "qrCodeUrl": qr_b64}
+
+            if sess.get("qr_code_b64") and len(sess["qr_code_b64"]) > 3000:
                 return {"success": True, "status": sess["status"], "qrCodeUrl": sess["qr_code_b64"]}
             else:
+                if qr_loc and await qr_loc.count() > 0:
+                    qr_bytes = await qr_loc.screenshot()
+                    qr_b64 = "data:image/png;base64," + base64.b64encode(qr_bytes).decode("utf-8")
+                    if len(qr_b64) > 3000:
+                        sess["qr_code_b64"] = qr_b64
+                    return {"success": True, "status": sess["status"], "qrCodeUrl": qr_b64}
                 return {"success": False, "status": sess["status"], "errorMessage": "二维码元素暂不可见"}
         except Exception as e:
             return {"success": False, "status": sess["status"], "errorMessage": f"获取二维码截屏异常: {str(e)}"}
