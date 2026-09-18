@@ -613,5 +613,86 @@ export const api = {
       body: JSON.stringify({ matrix })
     });
     return handleResponse(res);
+  },
+
+  // --- ContentOS SaaS New APIs ---
+
+  // Content Calendar
+  async getCalendarEvents(params?: { creatorId?: string; platform?: string; start?: string; end?: string }): Promise<{ code: number; data: any[] }> {
+    const query = new URLSearchParams(params as any).toString();
+    const res = await authFetch(`${BASE_URL}/calendar?${query}`);
+    return handleResponse(res);
+  },
+
+  async rescheduleCalendarTask(taskId: string, scheduledAt: string): Promise<{ code: number; message: string }> {
+    const res = await authFetch(`${BASE_URL}/calendar/tasks/${taskId}/reschedule`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scheduledAt })
+    });
+    return handleResponse(res);
+  },
+
+  // Async Jobs
+  async getAsyncJob(jobId: string): Promise<{ code: number; data: any }> {
+    const res = await authFetch(`${BASE_URL}/async-jobs/${jobId}`);
+    return handleResponse(res);
+  },
+
+  async listAsyncJobs(creatorId?: string): Promise<{ code: number; data: any[] }> {
+    const query = creatorId ? `?creatorId=${encodeURIComponent(creatorId)}` : '';
+    const res = await authFetch(`${BASE_URL}/async-jobs${query}`);
+    return handleResponse(res);
+  },
+
+  // AI Credits & Wallet
+  async getCreditWallet(): Promise<{ code: number; data: any }> {
+    const res = await authFetch(`${BASE_URL}/credits/wallet`);
+    return handleResponse(res);
+  },
+
+  async listCreditLedgers(): Promise<{ code: number; data: any[] }> {
+    const res = await authFetch(`${BASE_URL}/credits/ledgers`);
+    return handleResponse(res);
+  },
+
+  // DAM Digital Assets
+  async listAssets(params?: { creatorId?: string; type?: string; limit?: number; offset?: number }): Promise<{ code: number; data: { total: number; items: any[] } }> {
+    const query = new URLSearchParams(params as any).toString();
+    const res = await authFetch(`${BASE_URL}/assets?${query}`);
+    return handleResponse(res);
+  },
+
+  async createAsset(assetData: any): Promise<{ code: number; data: any }> {
+    const res = await authFetch(`${BASE_URL}/assets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(assetData)
+    });
+    return handleResponse(res);
+  },
+
+  // Content Project AI Workflow
+  async generateMasterContent(payload: { creatorId: string; topicTitle: string; angle?: string; contentType?: string }): Promise<{ code: number; data: { projectId: string; masterContent: any } }> {
+    const res = await authFetch(`${BASE_URL}/content-projects/generate-master`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse(res);
+  },
+
+  // AI Learning & Insights
+  async getPerformanceInsights(creatorId: string): Promise<{ code: number; data: any[] }> {
+    const res = await authFetch(`${BASE_URL}/learning/creators/${creatorId}/insights`);
+    return handleResponse(res);
+  },
+
+  async approvePerformanceInsight(insightId: string): Promise<{ code: number; data: any }> {
+    const res = await authFetch(`${BASE_URL}/learning/insights/${insightId}/approve`, {
+      method: 'POST'
+    });
+    return handleResponse(res);
   }
 };
+

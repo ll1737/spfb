@@ -9,9 +9,17 @@ import (
 	"syscall"
 	"time"
 
+	"zhiyu-backend/internal/aigateway"
+	"zhiyu-backend/internal/asset"
+	"zhiyu-backend/internal/calendar"
 	"zhiyu-backend/internal/config"
+	"zhiyu-backend/internal/credit"
 	"zhiyu-backend/internal/delivery/http/handler"
 	"zhiyu-backend/internal/delivery/http/router"
+	"zhiyu-backend/internal/learning"
+	"zhiyu-backend/internal/platformcontent/adapter"
+	"zhiyu-backend/internal/prompt"
+	"zhiyu-backend/internal/queue"
 	"zhiyu-backend/internal/repository/mysql"
 	"zhiyu-backend/internal/repository/redis"
 	"zhiyu-backend/internal/service"
@@ -63,25 +71,43 @@ func main() {
 	memRepo := mysql.NewMemoryRepository(db)
 	topicRepo := mysql.NewTopicRepository(db)
 	contentPackageRepo := mysql.NewContentPackageRepository(db)
+	contentProjectRepo := mysql.NewContentProjectRepository(db)
 
-	// 7. Initialize Services (Business Layer)
+	// 7. Initialize AI Infrastructure & Platform Adapters & Async Queue
+	aiGateway := aigateway.NewAIGateway()
+	promptService := prompt.NewPromptService(db)
+	adapterRegistry := adapter.NewAdapterRegistry()
+	jobQueue := queue.NewJobQueue()
+
+	// 8. Initialize Services (Business Layer)
 	workerClient := service.NewWorkerClient(cfg)
 	authService := service.NewAuthService(userRepo, entRepo, cfg)
 	entService := service.NewEnterpriseService(entRepo, userRepo)
 	accService := service.NewAccountService(accRepo, cfg)
 	pubService := service.NewPublishService(pubRepo, accRepo, workerClient, cfg)
+	contentProjectService := service.NewContentProjectService(contentProjectRepo, aiGateway, promptService, adapterRegistry)
+	calendarService := calendar.NewCalendarService(db)
+	creditService := credit.NewCreditService(db)
+	assetService := asset.NewAssetService(db)
+	learningService := learning.NewLearningService(db, aiGateway)
 
-	// 8. Initialize Handlers (Delivery Layer)
+	// 9. Initialize Handlers (Delivery Layer)
 	handlers := &router.Handlers{
-		Auth:         handler.NewAuthHandler(authService, entService),
-		Enterprise:   handler.NewEnterpriseHandler(entService),
-		Account:      handler.NewAccountHandler(accService, workerClient),
-		Publish:      handler.NewPublishHandler(pubService),
-		Memory:       handler.NewMemoryHandler(memRepo),
-		Topic:        handler.NewTopicHandler(topicRepo),
+		Auth:           handler.NewAuthHandler(authService, entService),
+		Enterprise:     handler.NewEnterpriseHandler(entService),
+		Account:        handler.NewAccountHandler(accService, workerClient),
+		Publish:        handler.NewPublishHandler(pubService),
+		Memory:         handler.NewMemoryHandler(memRepo),
+		Topic:          handler.NewTopicHandler(topicRepo),
 		ContentPackage: handler.NewContentPackageHandler(contentPackageRepo),
-		SocialUpload: handler.NewSocialUploadHandler(accService),
-		Settings:     handler.NewSettingsHandler(cfg, workerClient),
+		ContentProject: handler.NewContentProjectHandler(contentProjectService),
+		Calendar:       handler.NewCalendarHandler(calendarService),
+		Job:            handler.NewJobHandler(jobQueue),
+		Credit:         handler.NewCreditHandler(creditService),
+		Asset:          handler.NewAssetHandler(assetService),
+		Learning:       handler.NewLearningHandler(learningService),
+		SocialUpload:   handler.NewSocialUploadHandler(accService),
+		Settings:       handler.NewSettingsHandler(cfg, workerClient),
 	}
 
 	// 9. Setup Router

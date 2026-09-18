@@ -416,6 +416,146 @@ export interface AuthResponse {
 }
 
 export interface LoginPayload {
+  encryptionKeySet: boolean;
+  browserHeadless: boolean;
+  browserPath?: string;
+  maxConcurrency: number;
+  autoRetryFailed: boolean;
+  maxRetries: number;
+  saveDebugScreenshots: boolean;
+  enableStealth?: boolean; // stealth.min.js anti-detection
+  usePatchright?: boolean; // Patchright stealth engine
+  humanTypingDelay?: boolean; // True user simulated delay
+  socialAutoUploadPath?: string; // social-auto-upload path or CLI bridge
+  isDesktopMode?: boolean;
+  llmGateway?: LLMGatewaySettings;
+}
+
+export interface LoginSessionResponse {
+  sessionId: string;
+  platform: PlatformId;
+  qrCodeUrl?: string;
+  status: 'waiting_scan' | 'scanned' | 'confirmed' | 'expired' | 'error';
+  expiresInSeconds: number;
+}
+
+export type UserRole =
+  | 'owner'       // 企业所有者 / 超级管理员
+  | 'admin'       // 企业管理员
+  | 'asset_admin' // AI 资产 / 专家
+  | 'operator'    // 内容运营官
+  | 'publisher'   // 发布专员
+  | 'reviewer'    // 审核员
+  | 'creator'     // 创作者
+  | 'viewer';     // 观察员
+
+export interface EnterpriseInfo {
+  id: string;
+  name: string;
+  industry: string;
+  location: string;
+  code: string;
+  tier: string;
+  status: 'active' | 'trial' | 'suspended';
+  quotaGenerated: string;
+  quotaStorageGB: number;
+  usedStorageGB: number;
+  logoText: string;
+  logoBg?: string;
+  inviteCode?: string;
+  createdAt: string;
+}
+
+export interface Brand {
+  id: string;
+  orgId: string;
+  name: string;
+  type: 'main' | 'sub';
+  accountsCount: number;
+  membersCount: number;
+  isCurrent: boolean;
+  iconText: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface TeamMember {
+  id: string;
+  orgId: string;
+  userId?: string;
+  name: string;
+  username: string;
+  email: string;
+  role: UserRole;
+  roleLabel: string;
+  badge: string;
+  badgeColor: string;
+  avatarText: string;
+  avatarUrl?: string;
+  isOwner?: boolean;
+  assignedBrands: string[]; // Brand IDs
+  joinedAt: string;
+  status: 'active' | 'invited' | 'disabled';
+}
+
+export interface CollaborationRule {
+  enabled: boolean;
+  ruleDescription: string;
+  requireAiAudit: boolean;
+  requireManualAudit: boolean;
+  requireRiskCheck: boolean;
+  approverRole: UserRole;
+  allowedPublishers: UserRole[];
+}
+
+export interface ModulePermissionRule {
+  moduleId: string;
+  moduleName: string;
+  category: string;
+  permissions: Record<UserRole, {
+    canRead: boolean;
+    canWrite: boolean;
+    canPublish?: boolean;
+    canAdmin?: boolean;
+  }>;
+}
+
+export interface EnterpriseDataResponse {
+  enterprise: EnterpriseInfo;
+  brands: Brand[];
+  members: TeamMember[];
+  collaborationRule: CollaborationRule;
+  currentBrand: Brand | null;
+  permissionsMatrix: ModulePermissionRule[];
+}
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  nickname: string;
+  avatarUrl: string;
+  role: UserRole;
+  roleLabel?: string;
+  enterpriseId?: string;
+  enterpriseName?: string;
+  currentBrandId?: string;
+  currentBrandName?: string;
+  teamName?: string;
+  phone?: string;
+  bio?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+  enterprise?: EnterpriseInfo;
+  message?: string;
+}
+
+export interface LoginPayload {
   account: string; // username or email
   password: string;
   rememberMe?: boolean;
@@ -435,4 +575,133 @@ export interface RegisterPayload {
   inviteCode?: string;
   teamName?: string;
   phone?: string;
+}
+
+// ContentOS SaaS Types
+export interface CalendarEvent {
+  id: string;
+  contentProjectId?: string;
+  publishTaskId?: string;
+  title: string;
+  platform: string;
+  accountNickname?: string;
+  scheduledAt: string;
+  status: 'scheduled' | 'publishing' | 'success' | 'failed';
+  contentType: string;
+  coverUrl?: string;
+}
+
+export interface AsyncJob {
+  id: string;
+  tenantId: string;
+  creatorId?: string;
+  contentProjectId?: string;
+  type: string;
+  status: 'queued' | 'running' | 'success' | 'failed' | 'cancelled';
+  progress: number;
+  currentStep: string;
+  result?: Record<string, any>;
+  errorMessage?: string;
+  startedAt: string;
+  finishedAt?: string;
+}
+
+export interface CreditWallet {
+  tenantId: string;
+  balance: number;
+  frozen: number;
+  updatedAt: string;
+}
+
+export interface CreditLedger {
+  id: string;
+  tenantId: string;
+  direction: 'IN' | 'OUT' | 'FREEZE' | 'UNFREEZE' | 'REFUND';
+  amount: number;
+  balanceAfter: number;
+  bizType: string;
+  bizId?: string;
+  idempotencyKey?: string;
+  remark?: string;
+  createdAt: string;
+}
+
+export interface Asset {
+  id: string;
+  tenantId: string;
+  creatorId?: string;
+  brandId?: string;
+  assetType: 'image' | 'video' | 'audio' | 'document';
+  sourceType: 'upload' | 'ai_generated' | 'platform_synced';
+  name: string;
+  storageKey: string;
+  url: string;
+  thumbnailUrl?: string;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  durationSec?: number;
+  sizeBytes?: number;
+  aiReusable: boolean;
+  commercialLicense: boolean;
+  createdAt: string;
+}
+
+export interface ContentMetricSnapshot {
+  id: string;
+  tenantId: string;
+  creatorId?: string;
+  contentProjectId: string;
+  platform: string;
+  impressions: number;
+  views: number;
+  likes: number;
+  comments: number;
+  favorites: number;
+  shares: number;
+  followersGain: number;
+  leads: number;
+  engagementRate: number;
+  collectedAt: string;
+}
+
+export interface PerformanceInsight {
+  id: string;
+  tenantId: string;
+  creatorId: string;
+  insightType: 'HOOK' | 'STRUCTURE' | 'CTA' | 'TOPIC' | 'TIMING';
+  statement: string;
+  evidenceJson?: string;
+  sampleSize: number;
+  confidence: number;
+  status: 'pending' | 'approved' | 'rejected' | 'archived';
+  approvedBy?: string;
+  createdAt: string;
+}
+
+export interface MasterContent {
+  id: string;
+  contentProjectId: string;
+  title: string;
+  summary: string;
+  hook: string;
+  corePoints?: string[];
+  body: string;
+  cta: string;
+  version: number;
+  aiGenerated: boolean;
+  createdAt: string;
+}
+
+export interface ContentProject {
+  id: string;
+  tenantId: string;
+  brandId?: string;
+  creatorId: string;
+  title: string;
+  contentType: string;
+  status: string;
+  currentStep: string;
+  masterContent?: MasterContent;
+  createdAt: string;
 }

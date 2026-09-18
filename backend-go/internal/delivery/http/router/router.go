@@ -11,15 +11,21 @@ import (
 )
 
 type Handlers struct {
-	Auth         *handler.AuthHandler
-	Enterprise   *handler.EnterpriseHandler
-	Account      *handler.AccountHandler
-	Publish      *handler.PublishHandler
-	Memory       *handler.MemoryHandler
-	Topic        *handler.TopicHandler
+	Auth           *handler.AuthHandler
+	Enterprise     *handler.EnterpriseHandler
+	Account        *handler.AccountHandler
+	Publish        *handler.PublishHandler
+	Memory         *handler.MemoryHandler
+	Topic          *handler.TopicHandler
 	ContentPackage *handler.ContentPackageHandler
-	SocialUpload *handler.SocialUploadHandler
-	Settings     *handler.SettingsHandler
+	ContentProject *handler.ContentProjectHandler
+	Calendar       *handler.CalendarHandler
+	Job            *handler.JobHandler
+	Credit         *handler.CreditHandler
+	Asset          *handler.AssetHandler
+	Learning       *handler.LearningHandler
+	SocialUpload   *handler.SocialUploadHandler
+	Settings       *handler.SettingsHandler
 }
 
 func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
@@ -127,6 +133,42 @@ func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
 			authGroup.GET("/content-packages", h.ContentPackage.List)
 			authGroup.POST("/content-packages", h.ContentPackage.Create)
 			authGroup.DELETE("/content-packages/:id", h.ContentPackage.Delete)
+
+			// Content Projects (SaaS AI Creator workflow)
+			if h.ContentProject != nil {
+				authGroup.POST("/content-projects/generate-master", h.ContentProject.CreateAndGenerateMaster)
+			}
+
+			// Content Calendar & Scheduling
+			if h.Calendar != nil {
+				authGroup.GET("/calendar", h.Calendar.GetCalendar)
+				authGroup.PUT("/calendar/tasks/:id/reschedule", h.Calendar.RescheduleTask)
+			}
+
+			// Async Jobs & Queue Progress
+			if h.Job != nil {
+				authGroup.GET("/async-jobs", h.Job.ListJobs)
+				authGroup.GET("/async-jobs/:id", h.Job.GetJob)
+			}
+
+			// AI Credit & Wallet
+			if h.Credit != nil {
+				authGroup.GET("/credits/wallet", h.Credit.GetWallet)
+				authGroup.GET("/credits/ledgers", h.Credit.ListLedgers)
+			}
+
+			// DAM Digital Assets
+			if h.Asset != nil {
+				authGroup.GET("/assets", h.Asset.ListAssets)
+				authGroup.POST("/assets", h.Asset.CreateAsset)
+			}
+
+			// Analytics & AI Learning
+			if h.Learning != nil {
+				authGroup.POST("/analytics/snapshots", h.Learning.RecordSnapshot)
+				authGroup.GET("/learning/creators/:creatorId/insights", h.Learning.AnalyzeMetrics)
+				authGroup.POST("/learning/insights/:id/approve", h.Learning.ApproveInsight)
+			}
 		}
 	}
 

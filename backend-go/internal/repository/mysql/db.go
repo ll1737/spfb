@@ -1,4 +1,4 @@
-﻿package mysql
+package mysql
 
 import (
 	"database/sql"
@@ -68,6 +68,8 @@ func InitMySQL(cfg config.MySQLConfig) (*gorm.DB, error) {
 	if cfg.AutoMigrate {
 		err = db.AutoMigrate(
 			&domain.User{},
+			&domain.Tenant{},
+			&domain.TenantMember{},
 			&domain.EnterpriseInfo{},
 			&domain.Brand{},
 			&domain.TeamMember{},
@@ -76,11 +78,28 @@ func InitMySQL(cfg config.MySQLConfig) (*gorm.DB, error) {
 			&domain.Account{},
 			&domain.PublishJob{},
 			&domain.PublishTask{},
+			&domain.Creator{},
+			&domain.CreatorPlan{},
+			&domain.CreatorPlanPlatform{},
 			&domain.CreatorPersona{},
 			&domain.MemoryCategory{},
 			&domain.MemoryItem{},
 			&domain.Topic{},
 			&domain.ContentPackage{},
+			&domain.ContentProject{},
+			&domain.MasterContent{},
+			&domain.PlatformContent{},
+			&domain.ContentVersion{},
+			&domain.ContentReview{},
+			&domain.PromptTemplate{},
+			&domain.CreditWallet{},
+			&domain.CreditLedger{},
+			&domain.Plan{},
+			&domain.Subscription{},
+			&domain.Asset{},
+			&domain.ContentMetricSnapshot{},
+			&domain.PerformanceInsight{},
+			&domain.AuditLog{},
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to auto migrate tables: %w", err)
