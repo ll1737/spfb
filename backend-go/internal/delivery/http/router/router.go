@@ -58,19 +58,20 @@ func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
 		api.POST("/auth/register", h.Auth.Register)
 		api.POST("/auth/logout", h.Auth.Logout)
 
-		// Public settings & worker probe
-		api.GET("/settings", h.Settings.GetSettings)
-		api.POST("/settings", h.Settings.UpdateSettings)
-		api.POST("/worker/ping", h.Settings.PingWorker)
-
-		// Public social-upload CLI generators
-		api.POST("/social-upload/cli-command", h.SocialUpload.GenerateCLI)
-		api.GET("/social-upload/export-cookie/:id", h.SocialUpload.ExportCookie)
-
 		// Protected Routes
 		authGroup := api.Group("")
 		authGroup.Use(middleware.Auth(cfg))
 		{
+			// System Settings & Worker probe (Protected)
+			authGroup.GET("/settings", h.Settings.GetSettings)
+			authGroup.PUT("/settings", h.Settings.UpdateSettings)
+			authGroup.POST("/settings", h.Settings.UpdateSettings)
+			authGroup.POST("/worker/ping", h.Settings.PingWorker)
+
+			// Social-upload CLI & Cookie export (Protected)
+			authGroup.POST("/social-upload/cli-command", h.SocialUpload.GenerateCLI)
+			authGroup.GET("/social-upload/export-cookie/:id", h.SocialUpload.ExportCookie)
+
 			// Current User
 			authGroup.GET("/auth/me", h.Auth.Me)
 			authGroup.PUT("/auth/profile", h.Auth.UpdateProfile)

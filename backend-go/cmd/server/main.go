@@ -1,12 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"zhiyu-backend/internal/aigateway"
@@ -123,25 +120,8 @@ func main() {
 		MaxHeaderBytes: 50 << 20, // 50MB
 	}
 
-	go func() {
-		log.Infof("Server listening on http://0.0.0.0:%d", cfg.Server.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed to listen: %v", err)
-		}
-	}()
-
-	// 11. Graceful Shutdown Signal Handling
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Info("Shutting down 智域 Enterprise Backend Server gracefully...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Errorf("Server forced to shutdown: %v", err)
+	log.Infof("Server listening on http://0.0.0.0:%d", cfg.Server.Port)
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Server failed to listen: %v", err)
 	}
-
-	log.Info("Server exited cleanly.")
 }

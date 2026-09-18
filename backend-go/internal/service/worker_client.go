@@ -96,17 +96,18 @@ func (c *WorkerClient) Publish(ctx context.Context, taskID, platform, accountID 
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		logger.Log.Warnf("Worker request failed (%v), fallback mock success", err)
+		logger.Log.Errorf("Worker request failed: %v", err)
 		return &WorkerPublishResponse{
-			Status:    "success",
-			Message:   "已通过本地模拟 RPA 引擎完成发布调度",
-			ResultURL: fmt.Sprintf("https://www.%s.com/video/%s", platform, taskID),
-		}, nil
+			Status:  "failed",
+			Message: fmt.Sprintf("Worker 执行节点不可用或请求超时: %v", err),
+		}, fmt.Errorf("worker unreachable: %w", err)
 	}
 	defer resp.Body.Close()
 
 	var pubResp WorkerPublishResponse
-	_ = json.NewDecoder(resp.Body).Decode(&pubResp)
+	if err := json.NewDecoder(resp.Body).Decode(&pubResp); err != nil {
+		return nil, fmt.Errorf("failed to decode worker response: %w", err)
+	}
 	return &pubResp, nil
 }
 

@@ -133,17 +133,11 @@ func (h *AccountHandler) VerifyAccount(c *gin.Context) {
 	// Call worker to validate session status
 	status, err := h.workerClient.AccountValidate(c.Request.Context(), string(acc.Platform), acc.ID, acc.EncryptedSession, acc.Nickname)
 	if err != nil {
-		// If worker is temporarily busy but account has valid credentials, treat as active
-		if acc.EncryptedSession != "" || acc.CookieData != "" {
-			updated, _ := h.accService.UpdateAccount(id, &domain.Account{
-				Status: "active",
-			})
-			if updated != nil {
-				response.Success(c, updated)
-				return
-			}
-		}
-		response.Error(c, http.StatusBadRequest, fmt.Sprintf("核验失败: %v", err))
+		updated, _ := h.accService.UpdateAccount(id, &domain.Account{
+			Status: "need_reauth",
+		})
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("核验失败: 执行节点不可用或网络异常 (%v)", err))
+		_ = updated
 		return
 	}
 
@@ -156,14 +150,17 @@ func (h *AccountHandler) VerifyAccount(c *gin.Context) {
 			return
 		}
 	} else if errDetail, ok := status["error"].(string); ok && errDetail != "" {
+		_, _ = h.accService.UpdateAccount(id, &domain.Account{
+			Status: "need_reauth",
+		})
 		response.Error(c, http.StatusBadRequest, fmt.Sprintf("核验未通过: %s", errDetail))
 		return
 	}
 
-	updated, _ := h.accService.UpdateAccount(id, &domain.Account{
-		Status: "active",
+	_, _ = h.accService.UpdateAccount(id, &domain.Account{
+		Status: "need_reauth",
 	})
-	response.Success(c, updated)
+	response.Error(c, http.StatusBadRequest, "核验未通过: 会话凭证无效或已过期，请重新扫码登录")
 }
 
 // POST /api/accounts/login-session
@@ -234,7 +231,7 @@ func (h *AccountHandler) GetPlatformLoginStatus(c *gin.Context) {
 		return
 	}
 
-	// When scan login succeeds, automatically persist the account with real nickname and avatar into the tenant matrix
+	// When scan login succeeds, update existing account or persist with matching accID (ensuring database Account.ID == Worker Profile ID)
 	if isLoggedIn, ok := result["isLoggedIn"].(bool); ok && isLoggedIn {
 		nickname, _ := result["nickname"].(string)
 		if nickname == "" {
@@ -249,21 +246,37 @@ func (h *AccountHandler) GetPlatformLoginStatus(c *gin.Context) {
 			encSession = fmt.Sprintf("session_token_%s_%s", platform, accID)
 		}
 
-		newAcc := &domain.Account{
-			ID:               fmt.Sprintf("acc_%s_%d", platform, time.Now().UnixNano()/1000000),
-			Platform:         domain.PlatformID(platform),
-			Nickname:         nickname,
-			Name:             nickname,
-			Group:            "扫码授权导入",
-			EncryptedSession: encSession,
-			SessionPreview:   fmt.Sprintf("Playwright RPA 实时授权 (真实账号：%s)", nickname),
-			AvatarURL:        avatarURL,
-			Status:           "active",
-		}
-
-		dto, err := h.accService.AddAccount(orgIDStr, brandIDStr, newAcc)
-		if err == nil && dto != nil {
-			result["account"] = dto
+		// 1. Check if account already exists in DB
+		existingAcc, _ := h.accService.GetAccount(accID)
+		if existingAcc != nil {
+			updated, _ := h.accService.UpdateAccount(accID, &domain.Account{
+				Nickname:         nickname,
+				Name:             nickname,
+				AvatarURL:        avatarURL,
+				EncryptedSession: encSession,
+				Status:           "active",
+				SessionPreview:   fmt.Sprintf("Playwright RPA 实时授权 (真实账号：%s)", nickname),
+			})
+			if updated != nil {
+				result["account"] = updated
+			}
+		} else {
+			// 2. Insert with the EXACT same accID that Worker used for Profile storage
+			newAcc := &domain.Account{
+				ID:               accID,
+				Platform:         domain.PlatformID(platform),
+				Nickname:         nickname,
+				Name:             nickname,
+				Group:            "扫码授权导入",
+				EncryptedSession: encSession,
+				SessionPreview:   fmt.Sprintf("Playwright RPA 实时授权 (真实账号：%s)", nickname),
+				AvatarURL:        avatarURL,
+				Status:           "active",
+			}
+			dto, err := h.accService.AddAccount(orgIDStr, brandIDStr, newAcc)
+			if err == nil && dto != nil {
+				result["account"] = dto
+			}
 		}
 	}
 
