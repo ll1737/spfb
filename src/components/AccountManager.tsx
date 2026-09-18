@@ -6,6 +6,7 @@ import {
   Trash2, 
   ShieldCheck, 
   QrCode, 
+  CheckCircle,
   CheckCircle2, 
   AlertCircle, 
   ExternalLink, 
