@@ -1,41 +1,53 @@
 {
-  "name": "multi-publish-desk",
+  "name": "zhiyu",
+  "description": "智域",
+  "author": "Zhiyu",
   "private": true,
   "version": "2.4.0",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
-    "start": "node dist/server.cjs",
+    "dev": "vite",
+    "dev:all": "concurrently \"vite\" \"npm run go:run\"",
+    "go:run": "cd backend-go && set \"GOCACHE=D:\\Auserproject\\xhsfb\\.go-cache\" && \"D:\\Auserproject\\zyxm\\go\\bin\\go.exe\" run ./cmd/server",
+    "go:build": "cd backend-go && set \"GOCACHE=D:\\Auserproject\\xhsfb\\.go-cache\" && \"D:\\Auserproject\\zyxm\\go\\bin\\go.exe\" build -o bin/server.exe ./cmd/server",
+    "go:start": "cd backend-go && bin\\server.exe",
+    "build": "vite build && npm run go:build",
+    "start": "cd backend-go && bin\\server.exe",
+    "worker": "python services/worker/main.py",
     "electron": "electron .",
-    "electron:dev": "concurrently \"npm run dev\" \"electron .\"",
+    "electron:dev": "concurrently \"vite\" \"npm run go:start\" \"electron .\"",
     "electron:pack": "electron-builder --dir",
     "electron:dist": "electron-builder",
+    "pack:win": "node scripts/pack.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
     "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "vite": "^6.2.3",
-    "express": "^4.21.2",
-    "dotenv": "^17.2.3",
-    "motion": "^12.23.24"
+    "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^10.0.5",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.0.12",
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3",
-    "@types/express": "^4.17.21"
+    "vite": "^6.2.3"
   }
 }

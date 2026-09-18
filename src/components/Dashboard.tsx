@@ -1,18 +1,6 @@
 import React from 'react';
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Users, 
-  Send, 
-  ArrowUpRight, 
-  AlertTriangle,
-  RefreshCw,
-  TrendingUp,
-  ShieldCheck,
-  ListTodo
-} from 'lucide-react';
-import { Account, PublishJob, PublishTask, PlatformId } from '../types';
+import { AlertTriangle, ArrowRight, Calendar, Layers, Send, ShieldCheck, Sparkles } from 'lucide-react';
+import { Account, PlatformId, PublishJob, PublishTask } from '../types';
 import { PLATFORMS_META } from '../data/defaultData';
 
 interface DashboardProps {
@@ -24,334 +12,56 @@ interface DashboardProps {
   onRefresh: () => void;
   isRefreshing: boolean;
   workerConnected: boolean;
+  onSelectTopicForCreate?: (topicTitle: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({
-  accounts,
-  jobs,
-  tasks,
-  onNavigate,
-  onOpenPublish,
-  onRefresh,
-  isRefreshing,
-  workerConnected
-}) => {
-  // Compute analytics
-  const totalTasks = tasks.length;
-  const successTasks = tasks.filter((t) => t.status === 'success').length;
-  const failedTasks = tasks.filter((t) => t.status === 'failed').length;
-  const runningTasks = tasks.filter((t) => t.status === 'running').length;
-  const queuedTasks = tasks.filter((t) => t.status === 'queued').length;
-  const successRate = totalTasks > 0 ? `${Math.round((successTasks / totalTasks) * 100)}%` : '—';
-
-  const activeAccounts = accounts.filter((a) => a.status === 'active').length;
-  const expiredAccounts = accounts.filter((a) => a.status !== 'active').length;
-
-  const platformKeys = Object.keys(PLATFORMS_META) as PlatformId[];
+export const Dashboard: React.FC<DashboardProps> = ({ accounts, jobs, tasks, onNavigate, onOpenPublish, onRefresh, workerConnected }) => {
+  const safeAccounts = accounts || [];
+  const safeJobs = jobs || [];
+  const safeTasks = tasks || [];
+  const activeAccounts = safeAccounts.filter((account) => account && account.status === 'active').length;
+  const runningTasks = safeTasks.filter((task) => task && task.status === 'running').length;
+  const queuedTasks = safeTasks.filter((task) => task && task.status === 'queued').length;
+  const successTasks = safeTasks.filter((task) => task && task.status === 'success').length;
+  const platformList = Object.keys(PLATFORMS_META) as PlatformId[];
+  const timelineTasks = safeTasks.filter((task) => task && (task.scheduledAt || task.status === 'running' || task.status === 'queued')).slice(0, 5);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Banner Alert if Worker offline */}
+    <div className="space-y-6 max-w-[1540px] mx-auto pb-10">
       {!workerConnected && (
-        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-            <div className="text-sm">
-              <span className="font-semibold">Playwright RPA Worker 尚未启动或正在连接：</span>
-              <span className="text-amber-800 ml-1">
-                Web 控制台已就绪，若需调度本地真实浏览器自动化发布，请启动本地 Worker 自动化节点。
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onNavigate('settings')}
-              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg shadow-xs"
-            >
-              查看 Worker 节点设置
-            </button>
-          </div>
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-xs"><AlertTriangle className="w-4 h-4 shrink-0" /><span><strong>Worker 未连接。</strong>扫码登录和真实发布需要先启动 Python Worker。</span></div>
+          <button onClick={() => onNavigate('settings')} className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-bold cursor-pointer">检查 Worker</button>
         </div>
       )}
 
-      {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Tasks */}
-        <div className="p-5 rounded-2xl bg-white border border-neutral-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-medium uppercase tracking-wider">累计发布任务</span>
-            <span className="p-2 rounded-lg bg-neutral-100 text-neutral-700">
-              <TrendingUp className="w-4 h-4" />
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl font-bold text-neutral-900">{totalTasks}</div>
-            <div className="text-xs text-neutral-500 mt-1 flex items-center gap-1">
-              <span>共覆盖</span>
-              <span className="font-semibold text-neutral-700">{jobs.length} 篇</span>
-              <span>核心原创内容</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Success Rate */}
-        <div className="p-5 rounded-2xl bg-white border border-neutral-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-medium uppercase tracking-wider">发布成功率</span>
-            <span className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
-              <CheckCircle2 className="w-4 h-4" />
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl font-bold text-emerald-600">{successRate}</div>
-            <div className="text-xs text-neutral-500 mt-1 flex items-center gap-2">
-              <span className="text-emerald-700 font-medium">成功 {successTasks}</span>
-              <span>/</span>
-              <span className="text-rose-600 font-medium">失败 {failedTasks}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Accounts Matrix */}
-        <div className="p-5 rounded-2xl bg-white border border-neutral-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-medium uppercase tracking-wider">活跃账号矩阵</span>
-            <span className="p-2 rounded-lg bg-blue-50 text-blue-600">
-              <Users className="w-4 h-4" />
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl font-bold text-neutral-900">{activeAccounts} <span className="text-sm font-normal text-neutral-500">/ {accounts.length}</span></div>
-            <div className="text-xs text-neutral-500 mt-1">
-              {expiredAccounts > 0 ? (
-                <span className="text-amber-600 font-medium">{expiredAccounts} 个账号需要重新授权</span>
-              ) : (
-                <span className="text-emerald-600 font-medium">全部账号登录态有效</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Task Engine Status */}
-        <div className="p-5 rounded-2xl bg-white border border-neutral-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-medium uppercase tracking-wider">运行队列与引擎</span>
-            <span className="p-2 rounded-lg bg-purple-50 text-purple-600">
-              <Clock className="w-4 h-4" />
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl font-bold text-neutral-900">
-              {runningTasks + queuedTasks}
-              <span className="text-xs font-normal text-neutral-500 ml-1.5">排队中</span>
-            </div>
-            <div className="text-xs text-neutral-500 mt-1 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Playwright 并发池就绪</span>
-            </div>
-          </div>
-        </div>
+        {[
+          ['发布任务', `${safeJobs.length}`, '真实任务记录'],
+          ['账号在线率', safeAccounts.length ? `${Math.round((activeAccounts / safeAccounts.length) * 100)}%` : '—', `${activeAccounts}/${safeAccounts.length} 个账号在线`],
+          ['执行中', `${runningTasks}`, `${queuedTasks} 个排队中`],
+          ['已完成', `${successTasks}`, '来自服务端任务状态']
+        ].map(([label, value, note]) => (
+          <div key={label} className="p-5 rounded-2xl bg-white border border-[#e8ebf3] shadow-xs"><div className="text-xs font-bold text-[#75809a]">{label}</div><div className="mt-4 text-2xl font-black text-[#171c2d]">{value}</div><div className="mt-1 text-xs text-[#8c97ad]">{note}</div></div>
+        ))}
       </div>
 
-      {/* Platform Health Matrix Section */}
-      <div className="p-6 rounded-2xl bg-white border border-neutral-200 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-bold text-neutral-900">8 大平台矩阵状态监控</h3>
-            <p className="text-xs text-neutral-500 mt-0.5">实时跟踪各平台账号登录状态、适配器健康度与支持的内容类型</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-7 space-y-6">
+          <div className="p-6 sm:p-7 rounded-3xl border border-[#ded8ff] bg-gradient-to-br from-[#f3f0ff] to-white shadow-sm">
+            <div className="flex items-start gap-3"><div className="w-10 h-10 rounded-2xl bg-[#735bf5] text-white flex items-center justify-center shrink-0"><Sparkles className="w-5 h-5" /></div><div><div className="text-xs font-extrabold text-[#7258f5]">真实内容创作入口</div><h2 className="text-lg font-black text-[#171c2d] mt-2">从空白内容开始创作</h2><p className="text-xs text-[#66718a] mt-2 leading-relaxed">当前不展示演示选题。填写真实标题和正文后，选择已验证的平台账号进行发布。</p><button onClick={() => onNavigate('editor')} className="mt-4 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#735af4] to-[#8876fa] flex items-center gap-2 cursor-pointer">开始创作 <ArrowRight className="w-3.5 h-3.5" /></button></div></div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className="p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg text-xs font-medium transition-colors"
-              title="刷新数据"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </button>
-            <button
-              onClick={() => onNavigate('accounts')}
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
-            >
-              <span>管理账号</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
+
+          <div className="p-6 rounded-3xl bg-white border border-[#e8ebf3] shadow-xs">
+            <div className="flex items-center justify-between pb-4 border-b border-[#f0f2f7]"><div><h3 className="text-base font-extrabold text-[#171c2d] flex items-center gap-2"><Calendar className="w-4 h-4 text-[#7258f5]" />发布任务队列</h3><p className="text-xs text-[#75809a] mt-0.5">只展示服务端真实任务</p></div><button onClick={() => onNavigate('tasks')} className="text-xs font-bold text-[#7258f5] flex items-center gap-1 cursor-pointer">查看任务 <ArrowRight className="w-3.5 h-3.5" /></button></div>
+            {timelineTasks.length === 0 ? <div className="py-10 text-center text-xs text-[#8c97ad]">暂无真实排期任务</div> : <div className="divide-y divide-[#f0f2f7]">{timelineTasks.map((task) => { const job = safeJobs.find((item) => item && item.id === task.jobId); const meta = PLATFORMS_META[task.platform]; return <div key={task.id} className="py-3.5 flex items-center gap-3"><div className="w-12 text-center font-mono text-xs font-bold text-[#171c2d]">{task.scheduledAt ? new Date(task.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div><div className="flex-1 min-w-0"><div className="text-xs font-bold text-[#20263a] truncate">{job?.title || '未命名发布任务'}</div><div className="text-[10px] text-[#8c97ad] mt-1">{task.accountNickname || '真实账号'} · {meta?.name || task.platform}</div></div><span className="px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-600">{task.status}</span><button onClick={onOpenPublish} className="p-1.5 text-[#8c97ad] hover:text-[#7258f5] cursor-pointer" title="创建发布任务"><Send className="w-4 h-4" /></button></div>; })}</div>}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {platformKeys.map((key) => {
-            const meta = PLATFORMS_META[key];
-            const platformAccounts = accounts.filter((a) => a.platform === key);
-            const activeAcc = platformAccounts.filter((a) => a.status === 'active').length;
-            const hasAccounts = platformAccounts.length > 0;
+        <div className="lg:col-span-5 space-y-6">
+          <div className="p-6 rounded-3xl bg-white border border-[#e8ebf3] shadow-xs"><div className="flex items-center justify-between pb-4 border-b border-[#f0f2f7]"><div><h3 className="text-base font-extrabold text-[#171c2d] flex items-center gap-2"><Layers className="w-4 h-4 text-[#7258f5]" />平台账号状态</h3><p className="text-xs text-[#75809a] mt-0.5">只显示服务端真实账号数据</p></div><button onClick={() => onNavigate('accounts')} className="text-xs font-bold text-[#7258f5] flex items-center gap-1 cursor-pointer">管理账号 <ArrowRight className="w-3.5 h-3.5" /></button></div><div className="grid grid-cols-2 gap-2.5 mt-4">{platformList.map((platform) => { const meta = PLATFORMS_META[platform]; const platformAccounts = safeAccounts.filter((account) => account && account.platform === platform); const online = platformAccounts.some((account) => account && account.status === 'active'); return <div key={platform} className="p-3 rounded-2xl border border-[#edf0f5] bg-[#fafbfe] flex items-center justify-between"><div className="flex items-center gap-2 min-w-0"><span className="w-6 h-6 rounded-lg text-white font-black text-[10px] flex items-center justify-center" style={{ backgroundColor: meta?.color || '#666' }}>{meta?.name?.slice(0, 1) || platform.slice(0, 1)}</span><div className="min-w-0"><div className="text-xs font-bold truncate">{meta?.name || platform}</div><div className="text-[10px] text-[#8e98b0]">{platformAccounts.length ? `${platformAccounts.length} 个账号` : '未接入'}</div></div></div><span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-500' : 'bg-slate-300'}`} /></div>; })}</div></div>
 
-            return (
-              <div 
-                key={key}
-                onClick={() => onNavigate('accounts')}
-                className="p-3.5 rounded-xl border border-neutral-200 hover:border-neutral-300 hover:shadow-sm cursor-pointer transition-all bg-neutral-50/50 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-neutral-900">{meta.name}</span>
-                    <span className={`w-2 h-2 rounded-full ${
-                      activeAcc > 0 ? 'bg-emerald-500' : hasAccounts ? 'bg-amber-500' : 'bg-neutral-300'
-                    }`} />
-                  </div>
-                  <div className="text-[10px] text-neutral-400 mt-0.5">{meta.nameEn}</div>
-                </div>
-
-                <div className="mt-3 pt-2 border-t border-neutral-200/60">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-[11px] text-neutral-500">已绑账号</span>
-                    <span className="text-xs font-bold text-neutral-800 font-mono">
-                      {platformAccounts.length}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-neutral-400 mt-0.5">
-                    {meta.supportedTypes.map((t) => t === 'article' ? '文章' : t === 'note' ? '图文' : '视频').join(' / ')}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Two columns: Recent Tasks & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Recent Tasks Feed */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-neutral-200 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-neutral-900">最近发布动态</h3>
-            <button
-              onClick={() => onNavigate('tasks')}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
-            >
-              <span>查看全部任务</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {tasks.length === 0 ? (
-            <div className="py-12 text-center text-neutral-400 text-sm">
-              暂无发布任务，点击上方「一键矩阵发布」开启第一次发布！
-            </div>
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {tasks.slice(0, 5).map((task) => {
-                const meta = PLATFORMS_META[task.platform];
-                const isSuccess = task.status === 'success';
-                const isFailed = task.status === 'failed';
-                const isRunning = task.status === 'running';
-
-                return (
-                  <div key={task.id} className="py-3.5 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${meta.badgeBg}`}>
-                        {meta.name.substring(0, 1)}
-                      </span>
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-neutral-900 truncate">
-                          {task.accountNickname ? `【${task.accountNickname}】` : ''} 任务 #{task.id.substring(0, 8)}
-                        </div>
-                        <div className="text-[11px] text-neutral-500 flex items-center gap-2 mt-0.5">
-                          <span>{meta.name}</span>
-                          <span>•</span>
-                          <span>{task.contentType === 'article' ? '长文章' : task.contentType === 'note' ? '图文动态' : '视频'}</span>
-                          <span>•</span>
-                          <span>{task.startedAt ? new Date(task.startedAt).toLocaleTimeString() : '刚刚'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                      {isSuccess && (
-                        <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          已发布
-                        </span>
-                      )}
-                      {isFailed && (
-                        <span className="flex items-center gap-1 text-xs font-medium text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
-                          <XCircle className="w-3.5 h-3.5" />
-                          失败
-                        </span>
-                      )}
-                      {isRunning && (
-                        <span className="flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md animate-pulse">
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          自动化执行中
-                        </span>
-                      )}
-                      {task.status === 'queued' && (
-                        <span className="flex items-center gap-1 text-xs font-medium text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-md">
-                          <Clock className="w-3.5 h-3.5" />
-                          排队中
-                        </span>
-                      )}
-                      {task.resultUrl && (
-                        <a
-                          href={task.resultUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-neutral-500 hover:text-neutral-900 p-1 hover:bg-neutral-100 rounded"
-                          title="查看线上链接"
-                        >
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Right 1 Col: Quick Workflow Card */}
-        <div className="p-6 rounded-2xl bg-neutral-900 text-white shadow-xs flex flex-col justify-between space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-neutral-800 text-emerald-400 border border-neutral-700">
-                快速上手
-              </span>
-              <ShieldCheck className="w-4 h-4 text-neutral-400" />
-            </div>
-            <h4 className="text-lg font-bold">三步完成全网矩阵分发</h4>
-            <div className="space-y-2.5 text-xs text-neutral-300 pt-2">
-              <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-neutral-800 text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
-                <span>在「账号矩阵」扫码登录或导入 Cookie 保存会话凭证</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-neutral-800 text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
-                <span>在「内容创作」编辑标题、正文、标签与封面媒体</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-neutral-800 text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0">3</span>
-                <span>勾选目标平台，一键发起 RPA 自动化多线程分发</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-4 border-t border-neutral-800">
-            <button
-              onClick={onOpenPublish}
-              className="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
-            >
-              <Send className="w-4 h-4" />
-              <span>立即体验一键矩阵发布</span>
-            </button>
-            <button
-              onClick={() => onNavigate('tasks')}
-              className="w-full py-2 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium text-xs rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-              <ListTodo className="w-3.5 h-3.5 text-neutral-400" />
-              <span>查看发布任务队列</span>
-            </button>
-          </div>
+          <div className="p-6 rounded-3xl bg-white border border-[#e8ebf3] shadow-xs space-y-4"><h3 className="text-base font-extrabold text-[#171c2d] flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-500" />自动化服务状态</h3><div className="flex items-center justify-between p-3 rounded-xl bg-[#f7f8fc] text-xs"><span className="text-[#647087]">Python Playwright Worker</span><span className={workerConnected ? 'font-bold text-emerald-600' : 'font-bold text-rose-600'}>{workerConnected ? '在线' : '离线'}</span></div><div className="flex items-center justify-between p-3 rounded-xl bg-[#f7f8fc] text-xs"><span className="text-[#647087]">有效账号</span><span className="font-bold text-[#171c2d]">{activeAccounts}</span></div><button onClick={onRefresh} className="w-full py-2.5 rounded-xl border border-[#e2e6ef] bg-white hover:bg-purple-50 text-xs font-bold text-[#505b73] cursor-pointer">刷新真实状态</button></div>
         </div>
       </div>
     </div>

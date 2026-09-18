@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import time
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel
 
@@ -39,10 +40,14 @@ class BasePlatformAdapter(ABC):
     platform_name: str = "base"
     creator_url: str = ""
 
-    @abstractmethod
-    async def login(self, context: Any) -> LoginResult:
-        """Launches QR code login or authenticates session"""
-        pass
+    async def login(self, context: Any = None) -> LoginResult:
+        """Default fallback for legacy login"""
+        return LoginResult(
+            success=False,
+            platform=self.platform_name,
+            status="error",
+            error_message="Please use start_login_session for persistent profile login"
+        )
 
     @abstractmethod
     async def validate_session(self, account: Dict[str, Any]) -> SessionStatus:
@@ -64,7 +69,20 @@ class BasePlatformAdapter(ABC):
         """Publishes short video / video contribution"""
         pass
 
-    @abstractmethod
     async def capture_debug(self, page: Any, task_id: str) -> Dict[str, Any]:
         """Captures failure screenshot, DOM snapshot, and telemetry"""
-        pass
+        return {"screenshot": f"debug_snapshots/{task_id}_{self.platform_name}.png"}
+
+    def not_configured_result(self, capability: str) -> PublishResult:
+        return PublishResult(
+            success=False,
+            platform=self.platform_name,
+            status="failed",
+            error_code="NOT_CONFIGURED",
+            error_message=f"{self.platform_name} 的真实 {capability} 流程尚未配置，未执行发布",
+            logs=[{
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "level": "error",
+                "message": f"{self.platform_name} 未配置真实 {capability} 适配器"
+            }]
+        )

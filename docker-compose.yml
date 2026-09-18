@@ -12,11 +12,20 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - WORKER_URL=http://worker:8000
-      - WORKER_API_KEY=secret_worker_token_2026
-      - APP_SECRET=multi_publish_secret_key_2026
+      - DATABASE_PATH=/app/data/zhiyu.sqlite
+      - WORKER_API_KEY=${WORKER_API_KEY:?WORKER_API_KEY is required}
+      - APP_SECRET=${APP_SECRET:?APP_SECRET is required}
     depends_on:
-      - worker
+      worker:
+        condition: service_healthy
+    volumes:
+      - zhiyu-data:/app/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   worker:
     build:
@@ -27,8 +36,20 @@ services:
       - "8000:8000"
     environment:
       - PORT=8000
-      - WORKER_API_KEY=secret_worker_token_2026
-      - APP_SECRET=multi_publish_secret_key_2026
+      - WORKER_API_KEY=${WORKER_API_KEY:?WORKER_API_KEY is required}
+      - APP_SECRET=${APP_SECRET:?APP_SECRET is required}
       - BROWSER_HEADLESS=true
+      - SCREENSHOT_DIR=/app/debug_snapshots
     ipc: host
+    volumes:
+      - zhiyu-debug:/app/debug_snapshots
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/worker/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  zhiyu-data:
+  zhiyu-debug:

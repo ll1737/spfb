@@ -1,0 +1,39 @@
+server:
+  port: 8088
+  mode: "debug" # debug | release
+  app_secret: "zhiyu_matrix_app_secret_super_secure_2026"
+  worker_url: "http://127.0.0.1:8000"
+  worker_api_key: "secret_worker_token_2026"
+
+database:
+  mysql:
+    host: "127.0.0.1"
+    port: 3306
+    user: "root"
+    password: "root123" # 本地 MySQL 密码
+    dbname: "zhiyu_db"
+    charset: "utf8mb4"
+    max_open_conns: 100
+    max_idle_conns: 20
+    conn_max_lifetime_min: 10
+    auto_migrate: true
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 50
+  min_idle_conns: 10
+
+jwt:
+  secret: "zhiyu_jwt_super_secret_token_2026"
+  expire_hours: 168 # 7 days
+
+log:
+  level: "info"
+  filename: "logs/zhiyu-server.log"
+  max_size: 20 # MB
+  max_backups: 5
+  max_age: 30 # days
+  compress: true

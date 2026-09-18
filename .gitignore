@@ -1,8 +1,27 @@
 node_modules/
 build/
 dist/
+release/
+release-verify*/
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+
+# Runtime data and credentials
+data/
+debug_snapshots/
+outputs/
+matrix_data.json
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+services/worker/**/__pycache__/
+services/worker/.pytest_cache/
+.python-deps/
+.npm-cache/
+.go-cache/
+.build_staging/
+dist-electron/
+backend-go/bin/

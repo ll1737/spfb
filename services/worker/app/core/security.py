@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 from typing import Dict, Any, Optional
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from .config import config
@@ -34,5 +35,5 @@ def decrypt_session(encrypted_str: str) -> Optional[Dict[str, Any]]:
         aesgcm = AESGCM(key)
         decrypted = aesgcm.decrypt(iv, ciphertext + tag, None)
         return json.loads(decrypted.decode("utf-8"))
-    except Exception as e:
-        return {"raw": encrypted_str, "error": str(e)}
+    except Exception:
+        return None

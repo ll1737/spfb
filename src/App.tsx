@@ -8,12 +8,22 @@ import { AccountManager } from './components/AccountManager';
 import { TaskCenter } from './components/TaskCenter';
 import { SettingsView } from './components/SettingsView';
 import { AuthPage } from './components/AuthPage';
+import { CalendarView } from './components/CalendarView';
+import { CreatorsView } from './components/CreatorsView';
+import { TopicsView } from './components/TopicsView';
+import { ContentPackagesView } from './components/ContentPackagesView';
+import { AssetCenter } from './components/AssetCenter';
+import { MemoryCenter } from './components/MemoryCenter';
+import { PlansView } from './components/PlansView';
+import { AnalyticsView } from './components/AnalyticsView';
+import { WorkflowView } from './components/WorkflowView';
+import { EnterpriseView } from './components/EnterpriseView';
 import { UserProfileModal } from './components/UserProfileModal';
+import { Layers } from 'lucide-react';
 
 import { Account, PublishJob, PublishTask, SystemSettings, ContentPayload, User } from './types';
 import { INITIAL_ACCOUNTS, EMPTY_POST } from './data/defaultData';
 import { api, authStorage } from './lib/api';
-import { Layers } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(authStorage.getUser());
@@ -22,13 +32,13 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
-  const [accounts, setAccounts] = useState<Account[]>(INITIAL_ACCOUNTS);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [jobs, setJobs] = useState<PublishJob[]>([]);
   const [tasks, setTasks] = useState<PublishTask[]>([]);
   const [content, setContent] = useState<ContentPayload>(EMPTY_POST);
   const [settings, setSettings] = useState<SystemSettings>({
     workerUrl: 'http://127.0.0.1:8000',
-    workerApiKey: 'secret_worker_token_2026',
+    workerApiKey: '',
     encryptionKeySet: true,
     browserHeadless: true,
     maxConcurrency: 3,
@@ -36,7 +46,7 @@ export default function App() {
     maxRetries: 2,
     saveDebugScreenshots: true
   });
-  const [workerConnected, setWorkerConnected] = useState<boolean>(true);
+  const [workerConnected, setWorkerConnected] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -82,23 +92,23 @@ export default function App() {
         api.getSettings()
       ]);
 
-      if (health.status === 'fulfilled') {
-        setWorkerConnected(health.value.workerConnected);
+      if (health.status === 'fulfilled' && health.value) {
+        setWorkerConnected(Boolean(health.value.workerConnected));
       }
       if (accs.status === 'fulfilled') {
-        setAccounts(accs.value);
+        setAccounts(Array.isArray(accs.value) ? accs.value : []);
       }
       if (jbs.status === 'fulfilled') {
-        setJobs(jbs.value);
+        setJobs(Array.isArray(jbs.value) ? jbs.value : []);
       }
       if (tsks.status === 'fulfilled') {
-        setTasks(tsks.value);
+        setTasks(Array.isArray(tsks.value) ? tsks.value : []);
       }
-      if (stt.status === 'fulfilled') {
+      if (stt.status === 'fulfilled' && stt.value) {
         setSettings(stt.value);
       }
     } catch (e) {
-      console.warn('Backend load error, using local fallback state', e);
+      console.warn('Backend load error; displaying only server-backed data', e);
     } finally {
       setIsRefreshing(false);
     }
@@ -110,10 +120,14 @@ export default function App() {
 
       // Periodic poll for running tasks
       const interval = setInterval(() => {
-        api.getTasks().then((t) => setTasks(t)).catch(() => {});
+        api.getTasks().then((t) => setTasks(Array.isArray(t) ? t : [])).catch(() => {});
       }, 4000);
 
       return () => clearInterval(interval);
+    } else {
+      setAccounts([]);
+      setJobs([]);
+      setTasks([]);
     }
   }, [currentUser]);
 
@@ -123,9 +137,11 @@ export default function App() {
       await api.logout();
     } catch {}
     setCurrentUser(null);
+    setAccounts([]);
+    setJobs([]);
+    setTasks([]);
     showToast('已安全退出登录');
   };
-
 
   // Submit Publish Job
   const handlePublishSubmit = async (params: {
@@ -137,9 +153,9 @@ export default function App() {
       const newJob = await api.createPublish(params);
       showToast('🎉 发布任务已创建，RPA 自动化分发正在多线程执行！');
       // Update local state
-      setJobs((prev) => [newJob, ...prev]);
+      setJobs((prev) => [newJob, ...(prev || [])]);
       if (newJob.tasks) {
-        setTasks((prev) => [...(newJob.tasks || []), ...prev]);
+        setTasks((prev) => [...(newJob.tasks || []), ...(prev || [])]);
       }
       setActiveTab('tasks');
     } catch (err: any) {
@@ -150,17 +166,17 @@ export default function App() {
 
   // Account operations
   const handleAccountAdded = (acc: Account) => {
-    setAccounts((prev) => [acc, ...prev]);
+    setAccounts((prev) => [acc, ...(prev || [])]);
     showToast(`✅ 已接入新账号【${acc.nickname}】`);
   };
 
   const handleAccountDeleted = (id: string) => {
-    setAccounts((prev) => prev.filter((a) => a.id !== id));
+    setAccounts((prev) => (prev || []).filter((a) => a.id !== id));
     showToast('已移除账号及凭证');
   };
 
   const handleAccountUpdated = (updated: Account) => {
-    setAccounts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setAccounts((prev) => (prev || []).map((a) => (a.id === updated.id ? updated : a)));
     showToast(`✅ 账号【${updated.nickname}】资料已更新`);
   };
 
@@ -170,8 +186,8 @@ export default function App() {
     showToast('系统设置已更新');
   };
 
-  const activeAccountsCount = accounts.filter((a) => a.status === 'active').length;
-  const pendingTasksCount = tasks.filter((t) => t.status === 'running' || t.status === 'queued').length;
+  const activeAccountsCount = (accounts || []).filter((a) => a && a.status === 'active').length;
+  const pendingTasksCount = (tasks || []).filter((t) => t && (t.status === 'running' || t.status === 'queued')).length;
 
   // 1. Initial Authentication Loading Screen
   if (isAuthLoading) {
@@ -181,7 +197,7 @@ export default function App() {
           <Layers className="w-6 h-6 text-emerald-400 animate-pulse" />
         </div>
         <div className="text-sm font-semibold tracking-wide text-neutral-200">
-          多平台发布矩阵系统
+          智域 · 全域智能创作与矩阵发布系统
         </div>
         <div className="text-xs text-neutral-500 mt-1 flex items-center gap-2">
           <div className="w-3.5 h-3.5 border-2 border-neutral-600 border-t-emerald-400 rounded-full animate-spin" />
@@ -218,7 +234,7 @@ export default function App() {
         activeTab={activeTab}
         onSelectTab={(tab) => setActiveTab(tab)}
         activeAccountsCount={activeAccountsCount}
-        totalAccountsCount={accounts.length}
+        totalAccountsCount={(accounts || []).length}
         pendingTasksCount={pendingTasksCount}
         currentUser={currentUser}
         onOpenProfile={() => setIsProfileModalOpen(true)}
@@ -228,26 +244,58 @@ export default function App() {
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
         <Header
-          workerConnected={workerConnected}
           activeTab={activeTab}
-          onOpenPublish={() => setIsPublishModalOpen(true)}
           currentUser={currentUser}
           onOpenProfile={() => setIsProfileModalOpen(true)}
           onLogout={handleLogout}
         />
 
         {/* Dynamic Body */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-[#f5f7fb]">
           {activeTab === 'dashboard' && (
             <Dashboard
-              accounts={accounts}
-              jobs={jobs}
-              tasks={tasks}
+              accounts={accounts || []}
+              jobs={jobs || []}
+              tasks={tasks || []}
               onNavigate={(tab) => setActiveTab(tab)}
               onOpenPublish={() => setIsPublishModalOpen(true)}
               onRefresh={loadData}
               isRefreshing={isRefreshing}
               workerConnected={workerConnected}
+              onSelectTopicForCreate={(topicTitle) => {
+                setContent((prev) => ({
+                  ...prev,
+                  title: topicTitle
+                }));
+                setActiveTab('editor');
+              }}
+            />
+          )}
+
+          {activeTab === 'creators' && (
+            <CreatorsView
+              onNavigateToEditor={(topicTitle) => {
+                if (topicTitle) {
+                  setContent((prev) => ({
+                    ...prev,
+                    title: topicTitle
+                  }));
+                }
+                setActiveTab('editor');
+              }}
+              onOpenPublish={() => setIsPublishModalOpen(true)}
+            />
+          )}
+
+          {activeTab === 'topics' && (
+            <TopicsView
+              onNavigateToEditor={(topicTitle) => {
+                setContent((prev) => ({
+                  ...prev,
+                  title: topicTitle
+                }));
+                setActiveTab('editor');
+              }}
             />
           )}
 
@@ -259,20 +307,72 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'calendar' && (
+            <CalendarView
+              tasks={tasks || []}
+              onSelectTask={() => setActiveTab('tasks')}
+            />
+          )}
+
           {activeTab === 'tasks' && (
             <TaskCenter
-              tasks={tasks}
+              tasks={tasks || []}
               onRefresh={loadData}
             />
           )}
 
           {activeTab === 'accounts' && (
             <AccountManager
-              accounts={accounts}
+              accounts={accounts || []}
               onRefresh={loadData}
               onAccountAdded={handleAccountAdded}
               onAccountDeleted={handleAccountDeleted}
               onAccountUpdated={handleAccountUpdated}
+            />
+          )}
+
+          {activeTab === 'content_packages' && (
+            <ContentPackagesView
+              onNavigateToEditorWithContent={(payload) => {
+                setContent(payload);
+                setActiveTab('editor');
+              }}
+              onOpenPublish={() => setIsPublishModalOpen(true)}
+            />
+          )}
+
+          {activeTab === 'workflow' && <WorkflowView />}
+
+          {activeTab === 'assets' && (
+            <AssetCenter
+              onUseInEditor={(url) => {
+                setContent((prev) => ({
+                  ...prev,
+                  images: prev.images.includes(url) ? prev.images : [url, ...prev.images]
+                }));
+                setActiveTab('editor');
+                showToast('已成功将素材引入创作编辑器配图！');
+              }}
+            />
+          )}
+
+          {activeTab === 'memory' && <MemoryCenter />}
+
+          {activeTab === 'analytics' && <AnalyticsView />}
+
+          {activeTab === 'plans' && <PlansView />}
+
+          {activeTab === 'enterprise' && (
+            <EnterpriseView
+              onShowToast={showToast}
+              currentUserRole={currentUser?.role || 'owner'}
+              onBrandChanged={(b) => {
+                if (currentUser) {
+                  const updated = { ...currentUser, currentBrandId: b.id, currentBrandName: b.name };
+                  setCurrentUser(updated);
+                  authStorage.setUser(updated);
+                }
+              }}
             />
           )}
 
@@ -290,7 +390,7 @@ export default function App() {
       <PublishModal
         isOpen={isPublishModalOpen}
         onClose={() => setIsPublishModalOpen(false)}
-        accounts={accounts}
+        accounts={accounts || []}
         content={content}
         onSubmit={handlePublishSubmit}
         onNavigateToAccounts={() => setActiveTab('accounts')}
@@ -320,4 +420,3 @@ export default function App() {
     </div>
   );
 }
-

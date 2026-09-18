@@ -5,7 +5,7 @@ echo   Multi-Publish Desk - 启动 Python Playwright Worker (Port 8000)
 echo ========================================================
 echo.
 
-cd services\worker
+cd /d "%~dp0..\services\worker"
 
 if not exist venv (
     echo [提示] 正在创建 Python 虚拟环境...
@@ -18,5 +18,9 @@ pip install -r requirements.txt
 playwright install chromium
 
 echo [启动] 启动 FastAPI Worker 服务...
-python main.py
+if exist "D:\python312\python.exe" (
+    "D:\python312\python.exe" main.py
+) else (
+    python main.py
+)
 pause

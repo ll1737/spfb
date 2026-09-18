@@ -17,34 +17,23 @@ class WeChatMpAdapter(BasePlatformAdapter):
 
     async def login(self, context: Any) -> LoginResult:
         return LoginResult(
-            success=True,
+            success=False,
             platform=self.platform_name,
-            status="waiting_scan",
-            qr_code_url="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://mp.weixin.qq.com/login?token=wx_auth"
+            status="error",
+            error_message="微信公众号真实扫码登录适配器尚未配置"
         )
 
     async def validate_session(self, account: Dict[str, Any]) -> SessionStatus:
         return SessionStatus(
-            is_valid=account.get("status") == "active",
+            is_valid=False,
             platform=self.platform_name,
             account_id=account.get("id", ""),
-            nickname=account.get("nickname", "微信公众号")
+            nickname=account.get("nickname"),
+            error="微信公众号真实 session 校验适配器尚未配置"
         )
 
     async def publish_article(self, payload: Dict[str, Any], account: Dict[str, Any]) -> PublishResult:
-        logs = [
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "info", "message": "Playwright 打开 mp.weixin.qq.com 并验证 token 鉴权"},
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "info", "message": "进入图文草稿箱，格式化注入富文本正文与摘要"},
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "info", "message": "设置封面图裁剪与原创声明"},
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "success", "message": "图文草稿保存成功，已同步至微信公众号后台"}
-        ]
-        return PublishResult(
-            success=True,
-            platform=self.platform_name,
-            status="success",
-            result_url=f"https://mp.weixin.qq.com/s?__biz={int(time.time())}&mid=1000&idx=1",
-            logs=logs
-        )
+        return self.not_configured_result("公众号草稿/发布")
 
     async def publish_note(self, payload: Dict[str, Any], account: Dict[str, Any]) -> PublishResult:
         return await self.publish_article(payload, account)

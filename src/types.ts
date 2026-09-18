@@ -79,6 +79,72 @@ export interface Account {
   };
 }
 
+export interface CreatorPersona {
+  id: string;
+  orgId?: string;
+  brandId?: string;
+  name: string;
+  avatar?: string;
+  title?: string;
+  domain?: string;
+  toneStyle?: string;
+  systemPrompt?: string;
+  knowledgeBase?: string;
+  targetAudience?: string;
+  status?: 'active' | 'disabled';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MemoryCategory {
+  id: string;
+  orgId?: string;
+  name: string;
+  icon?: string;
+  description?: string;
+  itemCount?: number;
+  updatedAt?: string;
+}
+
+export interface MemoryItem {
+  id: string;
+  orgId?: string;
+  brandId?: string;
+  categoryId: string;
+  title: string;
+  content: string;
+  tags?: string[];
+  weight?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Topic {
+  id: string;
+  orgId?: string;
+  brandId?: string;
+  title: string;
+  category?: string;
+  heatScore?: number;
+  tags?: string[];
+  angles?: string[];
+  status?: 'recommended' | 'adopted' | 'archived';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ContentPackage {
+  id: string;
+  orgId?: string;
+  brandId?: string;
+  topicId?: string;
+  title: string;
+  masterContent: string;
+  status?: 'draft' | 'generated' | 'scheduled' | 'published';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface MediaAsset {
   id: string;
   type: 'image' | 'video';
@@ -163,9 +229,53 @@ export interface PublishJob {
   };
 }
 
+export type LLMProviderId =
+  | 'deepseek'
+  | 'doubao'
+  | 'qwen'
+  | 'moonshot'
+  | 'openai'
+  | 'ollama'
+  | 'custom';
+
+export interface LLMModelInfo {
+  id: string;
+  name: string;
+  contextWindow: string;
+  recommendedFor: string;
+  costTier: 'low' | 'medium' | 'high';
+}
+
+export interface LLMProviderConfig {
+  id: LLMProviderId;
+  name: string;
+  enabled: boolean;
+  apiKey: string;
+  baseUrl?: string;
+  selectedModel: string;
+  availableModels: LLMModelInfo[];
+}
+
+export interface TaskModelRouting {
+  topicMining: string;
+  masterContent: string;
+  platformAdapt: string;
+  videoStoryboard: string;
+  complianceCheck: string;
+}
+
+export interface LLMGatewaySettings {
+  defaultProvider: LLMProviderId;
+  providers: Record<LLMProviderId, LLMProviderConfig>;
+  routing: TaskModelRouting;
+  temperature: number;
+  maxTokens: number;
+}
+
 export interface SystemSettings {
   workerUrl: string;
   workerApiKey: string;
+  workerApiKeySet?: boolean;
   encryptionKeySet: boolean;
   browserHeadless: boolean;
   browserPath?: string;
@@ -173,11 +283,12 @@ export interface SystemSettings {
   autoRetryFailed: boolean;
   maxRetries: number;
   saveDebugScreenshots: boolean;
-  enableStealth: boolean; // stealth.min.js anti-detection
-  usePatchright: boolean; // Patchright stealth engine
-  humanTypingDelay: boolean; // True user simulated delay
+  enableStealth?: boolean; // stealth.min.js anti-detection
+  usePatchright?: boolean; // Patchright stealth engine
+  humanTypingDelay?: boolean; // True user simulated delay
   socialAutoUploadPath?: string; // social-auto-upload path or CLI bridge
   isDesktopMode?: boolean;
+  llmGateway?: LLMGatewaySettings;
 }
 
 export interface LoginSessionResponse {
@@ -188,7 +299,95 @@ export interface LoginSessionResponse {
   expiresInSeconds: number;
 }
 
-export type UserRole = 'admin' | 'creator' | 'operator' | 'editor';
+export type UserRole =
+  | 'owner'       // 企业所有者 / 超级管理员
+  | 'admin'       // 企业管理员
+  | 'asset_admin' // AI 资产 / 专家
+  | 'operator'    // 内容运营官
+  | 'publisher'   // 发布专员
+  | 'reviewer'    // 审核员
+  | 'creator'     // 创作者
+  | 'viewer';     // 观察员
+
+export interface EnterpriseInfo {
+  id: string;
+  name: string;
+  industry: string;
+  location: string;
+  code: string;
+  tier: string;
+  status: 'active' | 'trial' | 'suspended';
+  quotaGenerated: string;
+  quotaStorageGB: number;
+  usedStorageGB: number;
+  logoText: string;
+  logoBg?: string;
+  inviteCode?: string;
+  createdAt: string;
+}
+
+export interface Brand {
+  id: string;
+  orgId: string;
+  name: string;
+  type: 'main' | 'sub';
+  accountsCount: number;
+  membersCount: number;
+  isCurrent: boolean;
+  iconText: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface TeamMember {
+  id: string;
+  orgId: string;
+  userId?: string;
+  name: string;
+  username: string;
+  email: string;
+  role: UserRole;
+  roleLabel: string;
+  badge: string;
+  badgeColor: string;
+  avatarText: string;
+  avatarUrl?: string;
+  isOwner?: boolean;
+  assignedBrands: string[]; // Brand IDs
+  joinedAt: string;
+  status: 'active' | 'invited' | 'disabled';
+}
+
+export interface CollaborationRule {
+  enabled: boolean;
+  ruleDescription: string;
+  requireAiAudit: boolean;
+  requireManualAudit: boolean;
+  requireRiskCheck: boolean;
+  approverRole: UserRole;
+  allowedPublishers: UserRole[];
+}
+
+export interface ModulePermissionRule {
+  moduleId: string;
+  moduleName: string;
+  category: string;
+  permissions: Record<UserRole, {
+    canRead: boolean;
+    canWrite: boolean;
+    canPublish?: boolean;
+    canAdmin?: boolean;
+  }>;
+}
+
+export interface EnterpriseDataResponse {
+  enterprise: EnterpriseInfo;
+  brands: Brand[];
+  members: TeamMember[];
+  collaborationRule: CollaborationRule;
+  currentBrand: Brand | null;
+  permissionsMatrix: ModulePermissionRule[];
+}
 
 export interface User {
   id: string;
@@ -197,6 +396,11 @@ export interface User {
   nickname: string;
   avatarUrl: string;
   role: UserRole;
+  roleLabel?: string;
+  enterpriseId?: string;
+  enterpriseName?: string;
+  currentBrandId?: string;
+  currentBrandName?: string;
   teamName?: string;
   phone?: string;
   bio?: string;
@@ -207,6 +411,7 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+  enterprise?: EnterpriseInfo;
   message?: string;
 }
 
@@ -222,6 +427,12 @@ export interface RegisterPayload {
   password: string;
   nickname: string;
   role?: UserRole;
+  registerMode?: 'create_org' | 'join_org';
+  enterpriseName?: string;
+  enterpriseIndustry?: string;
+  enterpriseLocation?: string;
+  brandName?: string;
+  inviteCode?: string;
   teamName?: string;
   phone?: string;
 }

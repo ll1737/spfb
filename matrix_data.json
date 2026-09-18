@@ -13,288 +13,1151 @@
       "phone": "13800138000",
       "bio": "系统默认预置管理员，拥有全平台发布与矩阵账号最高管理权限。",
       "createdAt": "2026-09-14T04:00:00.000Z",
-      "lastLoginAt": "2026-09-14T04:49:35.309Z"
+      "lastLoginAt": "2026-09-18T06:34:36.011Z"
     }
   ],
   "accounts": [
     {
-      "id": "acc_zhihu_1789361408964",
-      "platform": "zhihu",
-      "nickname": "知乎主账号_9173",
-      "name": "知乎主账号_9173",
-      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E7%9F%A5%E4%B9%8E%E4%B8%BB%E8%B4%A6%E5%8F%B7_9173",
+      "id": "acc_xiaohongshu_1789713872889",
+      "platform": "xiaohongshu",
+      "nickname": "小红书创作者_2889",
+      "name": "小红书创作者_2889",
+      "avatarUrl": "https://api.dicebear.com/7.x/identicon/svg?seed=acc_xiaohongshu_1789713872889",
       "status": "active",
-      "encryptedSession": "1259ceb8afdbbea313053085:c1497570443b5ff8169f066a597e6b02:d25e23edae4503451cbd07c6d922a877e7ec8583a1d8886af9497c6f571a2b7dfaad6e861a97a9ee9003fb5d1e9da3132252c8d98804e69606c6d8f94236356485ccf04243ff009dbed77e9e9317886bd66e0c1933abe5e037d25f47648f3bc0410bbcccf0c8fd819d975e0ba7cfde0e38168138ed2902cc045181",
-      "sessionPreview": "storageState_enc:***ddfb (已由 AES-256 加密)",
-      "lastVerifiedAt": "2026-09-14T04:50:08.965Z",
-      "createdAt": "2026-09-14T04:50:08.965Z",
-      "followersCount": 1791,
-      "stats": {
-        "publishedCount": 0,
-        "failedCount": 0
-      }
-    },
-    {
-      "id": "acc_douyin_1789361300829",
-      "platform": "douyin",
-      "nickname": "抖音美食官号",
-      "name": "抖音美食官号",
-      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E6%8A%96%E9%9F%B3%E7%BE%8E%E9%A3%9F%E5%AE%98%E5%8F%B7",
-      "status": "active",
-      "encryptedSession": "a4dfec65600101fc4f12e4f4:da355b74e729e32046313d3ba6c852cc:4adbdd975a53aab384626cf1b3d55d99daf0204e76400c6f922aa7df48430c3e107ed1774bb44e2c1680ff7b06bcbad487f6f01a017a47f8ca0d22d5017c4cba89ee281bc9ffe81ef13305a7c7871701251dadbec89b0b3b6e7803810190cc833e93a48b220067581337cba3cc28a5c0",
-      "sessionPreview": "storageState_enc:***a0ae (已由 AES-256 加密)",
-      "lastVerifiedAt": "2026-09-14T04:48:20.830Z",
-      "createdAt": "2026-09-14T04:48:20.830Z",
-      "followersCount": 7967,
-      "stats": {
-        "publishedCount": 0,
-        "failedCount": 0
-      }
-    },
-    {
-      "id": "acc_channels_1789361077125",
-      "platform": "channels",
-      "nickname": "微信视频号主号",
-      "name": "微信视频号主号",
-      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%91%E5%8F%B7%E4%B8%BB%E5%8F%B7",
-      "status": "active",
-      "encryptedSession": "222ca98bc26851cc4f0998e6:92b6b3881e742903018b798999e1013c:f275c7eb081295385b5db666e35c01a618297f971397126ddf6a1ec5003eb7ec57eabd6d31cb6920c87424db773a67bf34c58e3632c2e93e7db8ecbd655a4073619a1de00c7b0de92bf43a69ddf2391f985da20a338e5254d91f2d0a2f3a540d2567a077caf432979ff086090dfde29afcc464d149",
-      "sessionPreview": "storageState_enc:***25e6 (已由 AES-256 加密)",
-      "lastVerifiedAt": "2026-09-14T04:44:37.126Z",
-      "createdAt": "2026-09-14T04:44:37.126Z",
-      "followersCount": 1728,
-      "stats": {
-        "publishedCount": 0,
-        "failedCount": 0
-      }
-    },
-    {
-      "id": "acc_douyin_1789360927545",
-      "platform": "douyin",
-      "nickname": "测试抖音账号",
-      "name": "测试抖音账号",
-      "group": "测试组",
-      "avatarUrl": "https://api.dicebear.com/7.x/bottts/svg?seed=%E6%B5%8B%E8%AF%95%E6%8A%96%E9%9F%B3%E8%B4%A6%E5%8F%B7",
-      "status": "active",
-      "encryptedSession": "a32153a25369ca03e92fd735:fbf3c3c2fb5addaf8ad06efc6a973873:a434ad8c8ea1a9b9c72ae9c29fc69a5f023d57500f1e9c3d3b1aa94ed3b3423d2796641ed90ea80c3398a87f3d35d6b53378d45e35acc0ab25196fb12bd6a48a25a28f493e398a3a3cb9ca775e2d74c7ee8ebcf0cff8",
-      "sessionPreview": "storageState_enc:***7368 (已由 AES-256 加密)",
-      "lastVerifiedAt": "2026-09-14T04:42:07.546Z",
-      "createdAt": "2026-09-14T04:42:07.546Z",
+      "encryptedSession": "7a334cffa0143b094d7f76d8:e00939fc18cac63e7aa8b7f509c13529:707ebaa8b07712696128c2959965fe030336c66be82c9acb010d68fbe637bc1e2a59a6583cea42d7d22d40afba52f8b9832102f14f20b1f67a9062cbefbad2cd71a8efddf8a8e57f1d6e1c831b3dbe6ac14c4bcccf6a138287233e2b7cff73",
+      "sessionPreview": "Persistent Profile (data/profiles/xiaohongshu/acc_xiaohongshu_1789713872889) (已验证)",
+      "lastVerifiedAt": "2026-09-18T06:44:41.037Z",
+      "createdAt": "2026-09-18T06:44:41.037Z",
       "followersCount": 0,
       "stats": {
         "publishedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "id": "acc_douyin_1789371068030",
+      "platform": "douyin",
+      "nickname": "抖音创作者_8030",
+      "name": "抖音创作者_8030",
+      "avatarUrl": "https://api.dicebear.com/7.x/identicon/svg?seed=acc_douyin_1789371068030",
+      "status": "active",
+      "encryptedSession": "282b9c58c65fd5829874cb10:f528b007c52513f2903dca22b407b36f:08a0edc9b974d5bf0f649859f4ef94bb5dc6fd44e54c83616e02f0bc336c5497f47ce7a445e30a9e995a4b40cd9a05822b721668b9bc9a5ce174148ec16df211d255a05c877e6c5f11d9215710370c557169310066",
+      "sessionPreview": "Persistent Profile (data/profiles/douyin/acc_douyin_1789371068030) (已验证)",
+      "lastVerifiedAt": "2026-09-14T07:31:36.575Z",
+      "createdAt": "2026-09-14T07:31:36.575Z",
+      "followersCount": 0,
+      "stats": {
+        "publishedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "id": "acc_douyin_1789370592315",
+      "platform": "douyin",
+      "nickname": "抖音创作者_2315",
+      "name": "抖音创作者_2315",
+      "avatarUrl": "https://api.dicebear.com/7.x/identicon/svg?seed=acc_douyin_1789370592315",
+      "status": "active",
+      "encryptedSession": "bee2da01ec11807f01f2369e:777fa770737a7c685f252c1ad9b8ad54:261261046e885aa2651341f8a7f856372b51c11f7ab918e18611a061cff0eed7390f699eaa3e30201344d73aaa4f84dea4255285278607dd4c04ac66736773dd54f7475fe0e2ada3228fdd46ed397690f12600c8a2",
+      "sessionPreview": "Persistent Profile (data/profiles/douyin/acc_douyin_1789370592315) (已验证)",
+      "lastVerifiedAt": "2026-09-14T07:23:25.173Z",
+      "createdAt": "2026-09-14T07:23:25.173Z",
+      "followersCount": 0,
+      "stats": {
+        "publishedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "id": "acc_weibo_1789369641598",
+      "platform": "weibo",
+      "nickname": "微博用户_1598",
+      "name": "微博用户_1598",
+      "avatarUrl": "https://tvax2.sinaimg.cn/crop.0.0.1002.1002.1024/6853040fly8gdim7s3zdjj20ru0rumys.jpg?KID=imgbed,tva&Expires=1789380500&ssig=P4lswnjdHv",
+      "status": "active",
+      "encryptedSession": "cc0477eab6ce96f43e260ede:27efeef3f95857276cb122e3148ec789:7af50acfd2d3b7fb8c2e9d33a65f55a209dcf2a778a619e104bd998c6e3d495e8945cda504972a26dd43e9db6af4ca8d8500681783e884af9c34744a09b3b2329eaa520d2b259fdfaa403c9eec16bc123b8e96",
+      "sessionPreview": "Persistent Profile (data/profiles/weibo/acc_weibo_1789369641598) (已验证)",
+      "lastVerifiedAt": "2026-09-14T07:08:25.523Z",
+      "createdAt": "2026-09-14T07:08:25.523Z",
+      "followersCount": 0,
+      "stats": {
+        "publishedCount": 1,
+        "failedCount": 1
+      }
+    },
+    {
+      "id": "acc_zhihu_1789366922712",
+      "platform": "zhihu",
+      "nickname": "知乎创作者",
+      "name": "知乎创作者",
+      "avatarUrl": "https://picx.zhimg.com/v2-8ad3d9f84724cb020a297138fcc89e82_l.jpg?source=32738c0c&needBackground=1",
+      "status": "active",
+      "encryptedSession": "b3e587141097cac1299ec72a:5a52e61156eb2940c18ae2091832e613:3b02400681329010c60a0d9c40261898534dd7c6f475f9c98169f733d252be279ddf25487836ba680da595e64408a480d8bfdf666d2196cfad026cc047d9531f05b6c3c32a42920f0b32c70859ea1129616a8b",
+      "sessionPreview": "Persistent Profile (data/profiles/zhihu/acc_zhihu_1789366922712) (已验证)",
+      "lastVerifiedAt": "2026-09-14T06:22:19.543Z",
+      "createdAt": "2026-09-14T06:22:19.502Z",
+      "followersCount": 0,
+      "stats": {
+        "publishedCount": 2,
         "failedCount": 0
       }
     }
   ],
   "jobs": [
     {
-      "id": "job_1789361663671",
-      "title": "多平台内容分发_9/14/2026",
-      "contentType": "video",
-      "status": "running",
-      "createdAt": "2026-09-14T04:54:23.672Z",
+      "id": "job_1789377910003",
+      "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+      "contentType": "article",
+      "status": "success",
+      "createdAt": "2026-09-14T09:25:10.003Z",
       "payload": {
-        "title": "多平台内容分发_9/14/2026",
-        "content": "自动化分发测试正文",
-        "contentType": "video",
-        "tags": [
-          "科技"
+        "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+        "summary": "基于 Playwright 自动化技术与多平台适配器，实现抖音、小红书、微博、知乎等一键矩阵发布，显著提升创作者分发效率。",
+        "contentType": "article",
+        "content": "## 为什么需要多平台内容一键发布？\n\n在当前的创作者生态中，单一平台不仅流量波动剧烈，且面临账号合规的系统性风险。因此，**跨平台内容矩阵分发**已成为自媒体工作室与企业品牌营销的刚需。\n\n### 核心难点剖析：\n1. **格式差异大**：微信公众号要求富文本/长排版，知乎侧重 Markdown 专栏，小红书要求图文卡片，抖音与快手更适配 9:16 短视频或快拍图文。\n2. **账号风控严**：各平台检测自动化手段频繁，粗暴的 API 限制多且容易封号。\n3. **维护成本高**：不同平台的登录态维持（Cookie/Session）、发布器 DOM 更新都需要持久化维护。\n\n### 本系统的架构设计：\n- **Adapter 模式解耦**：统一 `publish_article`、`publish_note`、`publish_video` 接口；\n- **AES 加密会话**：Playwright storageState 本地加密存储，杜绝明文凭证泄露；\n- **任务分发与重试**：支持定时发布、失败自动重试与截图留证；\n- **全流程管控**：提供一体化 Web 控制台与自动化 Worker 节点协同。\n\n> 提示：发布前请确认各平台已登录，并仔细核对各平台的字数限制与独立话题标签！",
+        "coverUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=675&fit=crop",
+        "images": [
+          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop"
         ],
-        "images": []
+        "videoUrl": "",
+        "tags": [
+          "自媒体运营",
+          "内容矩阵",
+          "效率工具",
+          "自动化发布",
+          "科技前沿"
+        ],
+        "sourceUrl": "https://github.com/Colinchiu007/Multi-Publish",
+        "overrides": {
+          "weibo": {
+            "title": "2026多平台一键矩阵发布实战指南",
+            "tags": [
+              "数码科技",
+              "效率神器",
+              "互联网运营"
+            ]
+          },
+          "xiaohongshu": {
+            "title": "自媒体人必看！多平台一键发布神器太省时间了✨",
+            "tags": [
+              "自媒体干货",
+              "打工人摸鱼神器",
+              "内容运营"
+            ]
+          }
+        },
+        "coverTimestamp": 1.5,
+        "platformOptions": {
+          "coverTimestamp": 1.5
+        }
       },
       "taskIds": [
-        "task_1789361663672_zhihu_h36lzl",
-        "task_1789361663672_douyin_a1a8xr",
-        "task_1789361663672_channels_omtp4r",
-        "task_1789361663672_douyin_l3rn3"
+        "task_1789377910003_zhihu_jiuzwd"
       ],
       "tasks": [
         {
-          "id": "task_1789361663672_zhihu_h36lzl",
-          "jobId": "job_1789361663671",
+          "id": "task_1789377910003_zhihu_jiuzwd",
+          "jobId": "job_1789377910003",
           "platform": "zhihu",
-          "accountId": "acc_zhihu_1789361408964",
-          "accountNickname": "知乎主账号_9173",
-          "contentType": "video",
-          "status": "running",
-          "startedAt": "2026-09-14T04:54:23.672Z",
+          "accountId": "acc_zhihu_1789366922712",
+          "accountNickname": "知乎创作者",
+          "contentType": "article",
+          "status": "success",
+          "startedAt": "2026-09-14T09:25:10.307Z",
           "attempt": 1,
           "maxAttempts": 3,
           "logs": [
             {
-              "timestamp": "2026-09-14T04:54:23.672Z",
+              "timestamp": "2026-09-14T09:25:10.003Z",
               "level": "info",
-              "message": "创建任务：针对【知乎主账号_9173】的 zhihu 发布"
+              "message": "创建任务：针对【知乎创作者】的 zhihu 发布"
+            },
+            {
+              "timestamp": "2026-09-14T09:25:10.307Z",
+              "level": "info",
+              "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+            },
+            {
+              "timestamp": "2026-09-14 17:25:10",
+              "level": "info",
+              "message": "正在加载知乎专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\zhihu\\acc_zhihu_1789366922712"
+            },
+            {
+              "timestamp": "2026-09-14 17:25:11",
+              "level": "info",
+              "message": "已读取持久化 Cookie 列表: _zap, HMACCOUNT_BFESS, d_c0, captcha_session_v2, __snaker__id, gdxidpyhxdE, q_c1, __zse_ck, z_c0, Hm_lvt_98beee57fd2ef70ccdd5ca52b9740c49, Hm_lvt_bff3d83079cef1ed8fc5e3f4579ec3b3"
+            },
+            {
+              "timestamp": "2026-09-14 17:25:11",
+              "level": "info",
+              "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+            },
+            {
+              "timestamp": "2026-09-14 17:25:11",
+              "level": "info",
+              "message": "定位文章标题输入框并填入标题: 2026年多平台内容矩阵分发全流程指南与自动化实战"
+            },
+            {
+              "timestamp": "2026-09-14 17:25:13",
+              "level": "info",
+              "message": "定位正文富文本编辑器并注入正文内容..."
+            },
+            {
+              "timestamp": "2026-09-14 17:25:13",
+              "level": "info",
+              "message": "尝试添加话题: 自媒体运营, 内容矩阵, 效率工具, 自动化发布, 科技前沿"
+            },
+            {
+              "timestamp": "2026-09-14 17:25:15",
+              "level": "info",
+              "message": "点击【发布】按钮并监听平台发布网络响应..."
+            },
+            {
+              "timestamp": "2026-09-14 17:25:15",
+              "level": "success",
+              "message": "知乎专栏真实发布成功！线上地址: https://zhuanlan.zhihu.com/p/2082882610716591559"
             }
-          ]
+          ],
+          "resultUrl": "https://zhuanlan.zhihu.com/p/2082882610716591559",
+          "finishedAt": "2026-09-14T09:25:16.357Z"
+        }
+      ],
+      "stats": {
+        "total": 1,
+        "success": 1,
+        "failed": 0,
+        "running": 0,
+        "queued": 0
+      }
+    },
+    {
+      "id": "job_1789369721173",
+      "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+      "contentType": "article",
+      "status": "success",
+      "createdAt": "2026-09-14T07:08:41.173Z",
+      "payload": {
+        "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+        "summary": "基于 Playwright 自动化技术与多平台适配器，实现抖音、小红书、微博、知乎等一键矩阵发布，显著提升创作者分发效率。",
+        "contentType": "article",
+        "content": "## 为什么需要多平台内容一键发布？\n\n在当前的创作者生态中，单一平台不仅流量波动剧烈，且面临账号合规的系统性风险。因此，**跨平台内容矩阵分发**已成为自媒体工作室与企业品牌营销的刚需。\n\n### 核心难点剖析：\n1. **格式差异大**：微信公众号要求富文本/长排版，知乎侧重 Markdown 专栏，小红书要求图文卡片，抖音与快手更适配 9:16 短视频或快拍图文。\n2. **账号风控严**：各平台检测自动化手段频繁，粗暴的 API 限制多且容易封号。\n3. **维护成本高**：不同平台的登录态维持（Cookie/Session）、发布器 DOM 更新都需要持久化维护。\n\n### 本系统的架构设计：\n- **Adapter 模式解耦**：统一 `publish_article`、`publish_note`、`publish_video` 接口；\n- **AES 加密会话**：Playwright storageState 本地加密存储，杜绝明文凭证泄露；\n- **任务分发与重试**：支持定时发布、失败自动重试与截图留证；\n- **全流程管控**：提供一体化 Web 控制台与自动化 Worker 节点协同。\n\n> 提示：发布前请确认各平台已登录，并仔细核对各平台的字数限制与独立话题标签！",
+        "coverUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=675&fit=crop",
+        "images": [
+          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop"
+        ],
+        "videoUrl": "",
+        "tags": [
+          "自媒体运营",
+          "内容矩阵",
+          "效率工具",
+          "自动化发布",
+          "科技前沿"
+        ],
+        "sourceUrl": "https://github.com/Colinchiu007/Multi-Publish",
+        "overrides": {
+          "weibo": {
+            "title": "2026多平台一键矩阵发布实战指南",
+            "tags": [
+              "数码科技",
+              "效率神器",
+              "互联网运营"
+            ]
+          },
+          "xiaohongshu": {
+            "title": "自媒体人必看！多平台一键发布神器太省时间了✨",
+            "tags": [
+              "自媒体干货",
+              "打工人摸鱼神器",
+              "内容运营"
+            ]
+          }
         },
+        "coverTimestamp": 1.5,
+        "platformOptions": {
+          "coverTimestamp": 1.5
+        }
+      },
+      "taskIds": [
+        "task_1789369721173_weibo_ve163"
+      ],
+      "tasks": [
         {
-          "id": "task_1789361663672_douyin_a1a8xr",
-          "jobId": "job_1789361663671",
-          "platform": "douyin",
-          "accountId": "acc_douyin_1789361300829",
-          "accountNickname": "抖音美食官号",
-          "contentType": "video",
-          "status": "running",
-          "startedAt": "2026-09-14T04:54:23.672Z",
-          "attempt": 1,
+          "id": "task_1789369721173_weibo_ve163",
+          "jobId": "job_1789369721173",
+          "platform": "weibo",
+          "accountId": "acc_weibo_1789369641598",
+          "accountNickname": "微博用户_1598",
+          "contentType": "article",
+          "status": "success",
+          "startedAt": "2026-09-14T07:13:44.237Z",
+          "attempt": 2,
           "maxAttempts": 3,
           "logs": [
             {
-              "timestamp": "2026-09-14T04:54:23.672Z",
+              "timestamp": "2026-09-14T07:08:41.173Z",
               "level": "info",
-              "message": "创建任务：针对【抖音美食官号】的 douyin 发布"
+              "message": "创建任务：针对【微博用户_1598】的 weibo 发布"
+            },
+            {
+              "timestamp": "2026-09-14T07:08:41.488Z",
+              "level": "info",
+              "message": "[weibo] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+            },
+            {
+              "timestamp": "2026-09-14 15:08:41",
+              "level": "info",
+              "message": "正在加载微博专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\weibo\\acc_weibo_1789369641598"
+            },
+            {
+              "timestamp": "2026-09-14 15:08:42",
+              "level": "info",
+              "message": "导航至微博发布中心: https://weibo.com"
+            },
+            {
+              "timestamp": "2026-09-14 15:08:50",
+              "level": "info",
+              "message": "点击【发送/发布】按钮..."
+            },
+            {
+              "timestamp": "2026-09-14 15:09:21",
+              "level": "error",
+              "message": "微博自动化发布异常: Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"button:has-text('发送'), button.Tool_btn_38qH5, button:has-text('发布')\").first\n    - locator resolved to <button disabled class=\"woo-button-main woo-button-flat woo-button-primary woo-button-m woo-button-round _btn_2z30i_68\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n      - waiting 100ms\n    56 × waiting for element to be visible, enabled and stable\n       - element is not enabled\n     - retrying click action\n       - waiting 500ms\n"
+            },
+            {
+              "timestamp": "2026-09-14T07:13:44.237Z",
+              "level": "info",
+              "message": "[weibo] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+            },
+            {
+              "timestamp": "2026-09-14 15:13:44",
+              "level": "info",
+              "message": "正在加载微博专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\weibo\\acc_weibo_1789369641598"
+            },
+            {
+              "timestamp": "2026-09-14 15:13:45",
+              "level": "info",
+              "message": "导航至微博发布中心: https://weibo.com"
+            },
+            {
+              "timestamp": "2026-09-14 15:13:49",
+              "level": "info",
+              "message": "填充微博正文与话题标签..."
+            },
+            {
+              "timestamp": "2026-09-14 15:13:52",
+              "level": "info",
+              "message": "点击【发送/发布】按钮..."
+            },
+            {
+              "timestamp": "2026-09-14 15:13:56",
+              "level": "success",
+              "message": "微博动态真实发布成功！当前地址: https://weibo.com/"
             }
-          ]
+          ],
+          "resultUrl": "https://weibo.com/",
+          "finishedAt": "2026-09-14T07:13:56.748Z"
+        }
+      ],
+      "stats": {
+        "total": 1,
+        "success": 1,
+        "failed": 0,
+        "running": 0,
+        "queued": 0
+      }
+    },
+    {
+      "id": "job_1789367503985",
+      "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+      "contentType": "article",
+      "status": "running",
+      "createdAt": "2026-09-14T06:31:43.985Z",
+      "payload": {
+        "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+        "summary": "基于 Playwright 自动化技术与多平台适配器，实现抖音、小红书、微博、知乎等一键矩阵发布，显著提升创作者分发效率。",
+        "contentType": "article",
+        "content": "## 为什么需要多平台内容一键发布？\n\n在当前的创作者生态中，单一平台不仅流量波动剧烈，且面临账号合规的系统性风险。因此，**跨平台内容矩阵分发**已成为自媒体工作室与企业品牌营销的刚需。\n\n### 核心难点剖析：\n1. **格式差异大**：微信公众号要求富文本/长排版，知乎侧重 Markdown 专栏，小红书要求图文卡片，抖音与快手更适配 9:16 短视频或快拍图文。\n2. **账号风控严**：各平台检测自动化手段频繁，粗暴的 API 限制多且容易封号。\n3. **维护成本高**：不同平台的登录态维持（Cookie/Session）、发布器 DOM 更新都需要持久化维护。\n\n### 本系统的架构设计：\n- **Adapter 模式解耦**：统一 `publish_article`、`publish_note`、`publish_video` 接口；\n- **AES 加密会话**：Playwright storageState 本地加密存储，杜绝明文凭证泄露；\n- **任务分发与重试**：支持定时发布、失败自动重试与截图留证；\n- **全流程管控**：提供一体化 Web 控制台与自动化 Worker 节点协同。\n\n> 提示：发布前请确认各平台已登录，并仔细核对各平台的字数限制与独立话题标签！",
+        "coverUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=675&fit=crop",
+        "images": [
+          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop"
+        ],
+        "videoUrl": "",
+        "tags": [
+          "自媒体运营",
+          "内容矩阵",
+          "效率工具",
+          "自动化发布",
+          "科技前沿"
+        ],
+        "sourceUrl": "https://github.com/Colinchiu007/Multi-Publish",
+        "overrides": {
+          "weibo": {
+            "title": "2026多平台一键矩阵发布实战指南",
+            "tags": [
+              "数码科技",
+              "效率神器",
+              "互联网运营"
+            ]
+          },
+          "xiaohongshu": {
+            "title": "自媒体人必看！多平台一键发布神器太省时间了✨",
+            "tags": [
+              "自媒体干货",
+              "打工人摸鱼神器",
+              "内容运营"
+            ]
+          }
         },
+        "coverTimestamp": 1.5,
+        "platformOptions": {
+          "coverTimestamp": 1.5
+        }
+      },
+      "taskIds": [
+        "task_1789367503985_zhihu_pgmfec"
+      ],
+      "tasks": [
         {
-          "id": "task_1789361663672_channels_omtp4r",
-          "jobId": "job_1789361663671",
-          "platform": "channels",
-          "accountId": "acc_channels_1789361077125",
-          "accountNickname": "微信视频号主号",
-          "contentType": "video",
+          "id": "task_1789367503985_zhihu_pgmfec",
+          "jobId": "job_1789367503985",
+          "platform": "zhihu",
+          "accountId": "acc_zhihu_1789366922712",
+          "accountNickname": "知乎创作者",
+          "contentType": "article",
           "status": "running",
-          "startedAt": "2026-09-14T04:54:23.672Z",
+          "startedAt": "2026-09-14T06:31:43.985Z",
           "attempt": 1,
           "maxAttempts": 3,
           "logs": [
             {
-              "timestamp": "2026-09-14T04:54:23.672Z",
+              "timestamp": "2026-09-14T06:31:43.985Z",
               "level": "info",
-              "message": "创建任务：针对【微信视频号主号】的 channels 发布"
-            }
-          ]
-        },
-        {
-          "id": "task_1789361663672_douyin_l3rn3",
-          "jobId": "job_1789361663671",
-          "platform": "douyin",
-          "accountId": "acc_douyin_1789360927545",
-          "accountNickname": "测试抖音账号",
-          "contentType": "video",
-          "status": "running",
-          "startedAt": "2026-09-14T04:54:23.672Z",
-          "attempt": 1,
-          "maxAttempts": 3,
-          "logs": [
-            {
-              "timestamp": "2026-09-14T04:54:23.672Z",
-              "level": "info",
-              "message": "创建任务：针对【测试抖音账号】的 douyin 发布"
+              "message": "创建任务：针对【知乎创作者】的 zhihu 发布"
             }
           ]
         }
       ],
       "stats": {
-        "total": 4,
+        "total": 1,
         "success": 0,
         "failed": 0,
-        "running": 4,
+        "running": 1,
         "queued": 0
       }
     },
     {
-      "id": "job_1789361494174",
-      "title": "测试标题",
-      "contentType": "video",
-      "status": "running",
-      "createdAt": "2026-09-14T04:51:34.174Z",
+      "id": "job_1789366958004",
+      "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+      "contentType": "article",
+      "status": "success",
+      "createdAt": "2026-09-14T06:22:38.004Z",
       "payload": {
-        "title": "测试标题",
-        "content": "测试内容",
-        "contentType": "video",
-        "tags": [
-          "测试"
+        "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+        "summary": "基于 Playwright 自动化技术与多平台适配器，实现抖音、小红书、微博、知乎等一键矩阵发布，显著提升创作者分发效率。",
+        "contentType": "article",
+        "content": "## 为什么需要多平台内容一键发布？\n\n在当前的创作者生态中，单一平台不仅流量波动剧烈，且面临账号合规的系统性风险。因此，**跨平台内容矩阵分发**已成为自媒体工作室与企业品牌营销的刚需。\n\n### 核心难点剖析：\n1. **格式差异大**：微信公众号要求富文本/长排版，知乎侧重 Markdown 专栏，小红书要求图文卡片，抖音与快手更适配 9:16 短视频或快拍图文。\n2. **账号风控严**：各平台检测自动化手段频繁，粗暴的 API 限制多且容易封号。\n3. **维护成本高**：不同平台的登录态维持（Cookie/Session）、发布器 DOM 更新都需要持久化维护。\n\n### 本系统的架构设计：\n- **Adapter 模式解耦**：统一 `publish_article`、`publish_note`、`publish_video` 接口；\n- **AES 加密会话**：Playwright storageState 本地加密存储，杜绝明文凭证泄露；\n- **任务分发与重试**：支持定时发布、失败自动重试与截图留证；\n- **全流程管控**：提供一体化 Web 控制台与自动化 Worker 节点协同。\n\n> 提示：发布前请确认各平台已登录，并仔细核对各平台的字数限制与独立话题标签！",
+        "coverUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=675&fit=crop",
+        "images": [
+          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop"
         ],
-        "images": []
+        "videoUrl": "",
+        "tags": [
+          "自媒体运营",
+          "内容矩阵",
+          "效率工具",
+          "自动化发布",
+          "科技前沿"
+        ],
+        "sourceUrl": "https://github.com/Colinchiu007/Multi-Publish",
+        "overrides": {
+          "weibo": {
+            "title": "2026多平台一键矩阵发布实战指南",
+            "tags": [
+              "数码科技",
+              "效率神器",
+              "互联网运营"
+            ]
+          },
+          "xiaohongshu": {
+            "title": "自媒体人必看！多平台一键发布神器太省时间了✨",
+            "tags": [
+              "自媒体干货",
+              "打工人摸鱼神器",
+              "内容运营"
+            ]
+          }
+        },
+        "coverTimestamp": 1.5,
+        "platformOptions": {
+          "coverTimestamp": 1.5
+        }
       },
-      "taskIds": [],
-      "tasks": [],
+      "taskIds": [
+        "task_1789366958004_zhihu_l968gw"
+      ],
+      "tasks": [
+        {
+          "id": "task_1789366958004_zhihu_l968gw",
+          "jobId": "job_1789366958004",
+          "platform": "zhihu",
+          "accountId": "acc_zhihu_1789366922712",
+          "accountNickname": "知乎创作者",
+          "contentType": "article",
+          "status": "success",
+          "startedAt": "2026-09-14T06:22:38.306Z",
+          "attempt": 1,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T06:22:38.004Z",
+              "level": "info",
+              "message": "创建任务：针对【知乎创作者】的 zhihu 发布"
+            },
+            {
+              "timestamp": "2026-09-14T06:22:38.307Z",
+              "level": "info",
+              "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+            },
+            {
+              "timestamp": "2026-09-14 14:22:38",
+              "level": "info",
+              "message": "正在加载知乎专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\zhihu\\acc_zhihu_1789366922712"
+            },
+            {
+              "timestamp": "2026-09-14 14:22:39",
+              "level": "info",
+              "message": "已读取持久化 Cookie 列表: _zap, HMACCOUNT_BFESS, Hm_lvt_98beee57fd2ef70ccdd5ca52b9740c49, d_c0, captcha_session_v2, __snaker__id, gdxidpyhxdE, q_c1, __zse_ck, BEC, BEC, z_c0, BEC"
+            },
+            {
+              "timestamp": "2026-09-14 14:22:39",
+              "level": "info",
+              "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+            },
+            {
+              "timestamp": "2026-09-14 14:22:40",
+              "level": "info",
+              "message": "定位文章标题输入框并填入标题: 2026年多平台内容矩阵分发全流程指南与自动化实战"
+            },
+            {
+              "timestamp": "2026-09-14 14:22:41",
+              "level": "info",
+              "message": "定位正文富文本编辑器并注入正文内容..."
+            },
+            {
+              "timestamp": "2026-09-14 14:22:41",
+              "level": "info",
+              "message": "尝试添加话题: 自媒体运营, 内容矩阵, 效率工具, 自动化发布, 科技前沿"
+            },
+            {
+              "timestamp": "2026-09-14 14:22:43",
+              "level": "info",
+              "message": "点击【发布】按钮并监听平台发布网络响应..."
+            },
+            {
+              "timestamp": "2026-09-14 14:22:44",
+              "level": "success",
+              "message": "知乎专栏真实发布成功！线上地址: https://zhuanlan.zhihu.com/p/19650614"
+            }
+          ],
+          "resultUrl": "https://zhuanlan.zhihu.com/p/19650614",
+          "finishedAt": "2026-09-14T06:22:45.178Z"
+        }
+      ],
       "stats": {
-        "total": 0,
-        "success": 0,
+        "total": 1,
+        "success": 1,
         "failed": 0,
         "running": 0,
+        "queued": 0
+      }
+    },
+    {
+      "id": "job_1789365055881",
+      "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+      "contentType": "article",
+      "status": "running",
+      "createdAt": "2026-09-14T05:50:55.881Z",
+      "payload": {
+        "title": "2026年多平台内容矩阵分发全流程指南与自动化实战",
+        "summary": "基于 Playwright 自动化技术与多平台适配器，实现抖音、小红书、微博、知乎等一键矩阵发布，显著提升创作者分发效率。",
+        "contentType": "article",
+        "content": "## 为什么需要多平台内容一键发布？\n\n在当前的创作者生态中，单一平台不仅流量波动剧烈，且面临账号合规的系统性风险。因此，**跨平台内容矩阵分发**已成为自媒体工作室与企业品牌营销的刚需。\n\n### 核心难点剖析：\n1. **格式差异大**：微信公众号要求富文本/长排版，知乎侧重 Markdown 专栏，小红书要求图文卡片，抖音与快手更适配 9:16 短视频或快拍图文。\n2. **账号风控严**：各平台检测自动化手段频繁，粗暴的 API 限制多且容易封号。\n3. **维护成本高**：不同平台的登录态维持（Cookie/Session）、发布器 DOM 更新都需要持久化维护。\n\n### 本系统的架构设计：\n- **Adapter 模式解耦**：统一 `publish_article`、`publish_note`、`publish_video` 接口；\n- **AES 加密会话**：Playwright storageState 本地加密存储，杜绝明文凭证泄露；\n- **任务分发与重试**：支持定时发布、失败自动重试与截图留证；\n- **全流程管控**：提供一体化 Web 控制台与自动化 Worker 节点协同。\n\n> 提示：发布前请确认各平台已登录，并仔细核对各平台的字数限制与独立话题标签！",
+        "coverUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=675&fit=crop",
+        "images": [
+          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop"
+        ],
+        "videoUrl": "",
+        "tags": [
+          "自媒体运营",
+          "内容矩阵",
+          "效率工具",
+          "自动化发布",
+          "科技前沿"
+        ],
+        "sourceUrl": "https://github.com/Colinchiu007/Multi-Publish",
+        "overrides": {
+          "weibo": {
+            "title": "2026多平台一键矩阵发布实战指南",
+            "tags": [
+              "数码科技",
+              "效率神器",
+              "互联网运营"
+            ]
+          },
+          "xiaohongshu": {
+            "title": "自媒体人必看！多平台一键发布神器太省时间了✨",
+            "tags": [
+              "自媒体干货",
+              "打工人摸鱼神器",
+              "内容运营"
+            ]
+          }
+        },
+        "coverTimestamp": 1.5,
+        "platformOptions": {
+          "coverTimestamp": 1.5
+        }
+      },
+      "taskIds": [
+        "task_1789365055881_zhihu_91rv7"
+      ],
+      "tasks": [
+        {
+          "id": "task_1789365055881_zhihu_91rv7",
+          "jobId": "job_1789365055881",
+          "platform": "zhihu",
+          "accountId": "acc_zhihu_1789365024439",
+          "accountNickname": "1",
+          "contentType": "article",
+          "status": "running",
+          "startedAt": "2026-09-14T05:50:55.881Z",
+          "attempt": 1,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T05:50:55.881Z",
+              "level": "info",
+              "message": "创建任务：针对【1】的 zhihu 发布"
+            }
+          ]
+        }
+      ],
+      "stats": {
+        "total": 1,
+        "success": 0,
+        "failed": 0,
+        "running": 1,
+        "queued": 0
+      }
+    },
+    {
+      "id": "job_1789364875311",
+      "title": "????????",
+      "contentType": "article",
+      "status": "failed",
+      "createdAt": "2026-09-14T05:47:55.312Z",
+      "payload": {
+        "summary": "??????????",
+        "title": "????????",
+        "contentType": "article"
+      },
+      "taskIds": [
+        "task_1789364875311_zhihu_1xqw2"
+      ],
+      "tasks": [
+        {
+          "id": "task_1789364875311_zhihu_1xqw2",
+          "jobId": "job_1789364875311",
+          "platform": "zhihu",
+          "accountId": "acc_zhihu_1789364203193",
+          "accountNickname": "天天",
+          "contentType": "article",
+          "status": "failed",
+          "startedAt": "2026-09-14T05:50:28.879Z",
+          "attempt": 3,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T05:47:55.312Z",
+              "level": "info",
+              "message": "创建任务：针对【天天】的 zhihu 发布"
+            },
+            {
+              "timestamp": "2026-09-14T05:47:55.615Z",
+              "level": "info",
+              "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+            },
+            {
+              "timestamp": "2026-09-14 13:47:55",
+              "level": "info",
+              "message": "Playwright 正在拉起真实独立浏览器上下文..."
+            },
+            {
+              "timestamp": "2026-09-14 13:47:56",
+              "level": "info",
+              "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+            },
+            {
+              "timestamp": "2026-09-14 13:47:58",
+              "level": "error",
+              "message": "页面重定向至登录页，当前登录态已失效"
+            },
+            {
+              "timestamp": "2026-09-14T05:49:51.012Z",
+              "level": "info",
+              "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+            },
+            {
+              "timestamp": "2026-09-14 13:49:51",
+              "level": "info",
+              "message": "Playwright 正在拉起真实独立浏览器上下文..."
+            },
+            {
+              "timestamp": "2026-09-14 13:49:51",
+              "level": "info",
+              "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+            },
+            {
+              "timestamp": "2026-09-14 13:49:52",
+              "level": "error",
+              "message": "页面重定向至登录页，当前登录态已失效"
+            },
+            {
+              "timestamp": "2026-09-14T05:50:28.879Z",
+              "level": "info",
+              "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+            },
+            {
+              "timestamp": "2026-09-14 13:50:28",
+              "level": "info",
+              "message": "Playwright 正在拉起真实独立浏览器上下文..."
+            }
+          ],
+          "resultUrl": "",
+          "errorCode": "SESSION_MISSING",
+          "errorMessage": "账号未登录或未存储有效 Session，请在账号管理中扫码登录或重新授权",
+          "finishedAt": "2026-09-14T05:50:28.886Z"
+        }
+      ],
+      "stats": {
+        "total": 1,
+        "success": 0,
+        "failed": 1,
+        "running": 0,
+        "queued": 0
+      }
+    },
+    {
+      "id": "job_1789364211850",
+      "title": "多平台内容矩阵分发_2026/9/14",
+      "contentType": "note",
+      "status": "running",
+      "createdAt": "2026-09-14T05:36:51.850Z",
+      "payload": {
+        "title": "多平台内容矩阵分发_2026/9/14",
+        "summary": "",
+        "contentType": "note",
+        "content": "",
+        "coverUrl": "",
+        "images": [],
+        "videoUrl": "",
+        "tags": [],
+        "sourceUrl": "",
+        "overrides": {},
+        "coverTimestamp": 1.5,
+        "platformOptions": {
+          "coverTimestamp": 1.5
+        }
+      },
+      "taskIds": [
+        "task_1789364211850_zhihu_bwc2gd"
+      ],
+      "tasks": [
+        {
+          "id": "task_1789364211850_zhihu_bwc2gd",
+          "jobId": "job_1789364211850",
+          "platform": "zhihu",
+          "accountId": "acc_zhihu_1789364203193",
+          "accountNickname": "天天",
+          "contentType": "note",
+          "status": "running",
+          "startedAt": "2026-09-14T05:36:51.850Z",
+          "attempt": 1,
+          "maxAttempts": 3,
+          "logs": [
+            {
+              "timestamp": "2026-09-14T05:36:51.850Z",
+              "level": "info",
+              "message": "创建任务：针对【天天】的 zhihu 发布"
+            }
+          ]
+        }
+      ],
+      "stats": {
+        "total": 1,
+        "success": 0,
+        "failed": 0,
+        "running": 1,
         "queued": 0
       }
     }
   ],
   "tasks": [
     {
-      "id": "task_1789361663672_zhihu_h36lzl",
-      "jobId": "job_1789361663671",
+      "id": "task_1789377910003_zhihu_jiuzwd",
+      "jobId": "job_1789377910003",
       "platform": "zhihu",
-      "accountId": "acc_zhihu_1789361408964",
-      "accountNickname": "知乎主账号_9173",
-      "contentType": "video",
-      "status": "running",
-      "startedAt": "2026-09-14T04:54:23.672Z",
+      "accountId": "acc_zhihu_1789366922712",
+      "accountNickname": "知乎创作者",
+      "contentType": "article",
+      "status": "success",
+      "startedAt": "2026-09-14T09:25:10.307Z",
       "attempt": 1,
       "maxAttempts": 3,
       "logs": [
         {
-          "timestamp": "2026-09-14T04:54:23.672Z",
+          "timestamp": "2026-09-14T09:25:10.003Z",
           "level": "info",
-          "message": "创建任务：针对【知乎主账号_9173】的 zhihu 发布"
+          "message": "创建任务：针对【知乎创作者】的 zhihu 发布"
+        },
+        {
+          "timestamp": "2026-09-14T09:25:10.307Z",
+          "level": "info",
+          "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+        },
+        {
+          "timestamp": "2026-09-14 17:25:10",
+          "level": "info",
+          "message": "正在加载知乎专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\zhihu\\acc_zhihu_1789366922712"
+        },
+        {
+          "timestamp": "2026-09-14 17:25:11",
+          "level": "info",
+          "message": "已读取持久化 Cookie 列表: _zap, HMACCOUNT_BFESS, d_c0, captcha_session_v2, __snaker__id, gdxidpyhxdE, q_c1, __zse_ck, z_c0, Hm_lvt_98beee57fd2ef70ccdd5ca52b9740c49, Hm_lvt_bff3d83079cef1ed8fc5e3f4579ec3b3"
+        },
+        {
+          "timestamp": "2026-09-14 17:25:11",
+          "level": "info",
+          "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+        },
+        {
+          "timestamp": "2026-09-14 17:25:11",
+          "level": "info",
+          "message": "定位文章标题输入框并填入标题: 2026年多平台内容矩阵分发全流程指南与自动化实战"
+        },
+        {
+          "timestamp": "2026-09-14 17:25:13",
+          "level": "info",
+          "message": "定位正文富文本编辑器并注入正文内容..."
+        },
+        {
+          "timestamp": "2026-09-14 17:25:13",
+          "level": "info",
+          "message": "尝试添加话题: 自媒体运营, 内容矩阵, 效率工具, 自动化发布, 科技前沿"
+        },
+        {
+          "timestamp": "2026-09-14 17:25:15",
+          "level": "info",
+          "message": "点击【发布】按钮并监听平台发布网络响应..."
+        },
+        {
+          "timestamp": "2026-09-14 17:25:15",
+          "level": "success",
+          "message": "知乎专栏真实发布成功！线上地址: https://zhuanlan.zhihu.com/p/2082882610716591559"
+        }
+      ],
+      "resultUrl": "https://zhuanlan.zhihu.com/p/2082882610716591559",
+      "finishedAt": "2026-09-14T09:25:16.357Z"
+    },
+    {
+      "id": "task_1789369721173_weibo_ve163",
+      "jobId": "job_1789369721173",
+      "platform": "weibo",
+      "accountId": "acc_weibo_1789369641598",
+      "accountNickname": "微博用户_1598",
+      "contentType": "article",
+      "status": "success",
+      "startedAt": "2026-09-14T07:13:44.237Z",
+      "attempt": 2,
+      "maxAttempts": 3,
+      "logs": [
+        {
+          "timestamp": "2026-09-14T07:08:41.173Z",
+          "level": "info",
+          "message": "创建任务：针对【微博用户_1598】的 weibo 发布"
+        },
+        {
+          "timestamp": "2026-09-14T07:08:41.488Z",
+          "level": "info",
+          "message": "[weibo] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+        },
+        {
+          "timestamp": "2026-09-14 15:08:41",
+          "level": "info",
+          "message": "正在加载微博专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\weibo\\acc_weibo_1789369641598"
+        },
+        {
+          "timestamp": "2026-09-14 15:08:42",
+          "level": "info",
+          "message": "导航至微博发布中心: https://weibo.com"
+        },
+        {
+          "timestamp": "2026-09-14 15:08:50",
+          "level": "info",
+          "message": "点击【发送/发布】按钮..."
+        },
+        {
+          "timestamp": "2026-09-14 15:09:21",
+          "level": "error",
+          "message": "微博自动化发布异常: Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"button:has-text('发送'), button.Tool_btn_38qH5, button:has-text('发布')\").first\n    - locator resolved to <button disabled class=\"woo-button-main woo-button-flat woo-button-primary woo-button-m woo-button-round _btn_2z30i_68\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n      - waiting 100ms\n    56 × waiting for element to be visible, enabled and stable\n       - element is not enabled\n     - retrying click action\n       - waiting 500ms\n"
+        },
+        {
+          "timestamp": "2026-09-14T07:13:44.237Z",
+          "level": "info",
+          "message": "[weibo] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+        },
+        {
+          "timestamp": "2026-09-14 15:13:44",
+          "level": "info",
+          "message": "正在加载微博专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\weibo\\acc_weibo_1789369641598"
+        },
+        {
+          "timestamp": "2026-09-14 15:13:45",
+          "level": "info",
+          "message": "导航至微博发布中心: https://weibo.com"
+        },
+        {
+          "timestamp": "2026-09-14 15:13:49",
+          "level": "info",
+          "message": "填充微博正文与话题标签..."
+        },
+        {
+          "timestamp": "2026-09-14 15:13:52",
+          "level": "info",
+          "message": "点击【发送/发布】按钮..."
+        },
+        {
+          "timestamp": "2026-09-14 15:13:56",
+          "level": "success",
+          "message": "微博动态真实发布成功！当前地址: https://weibo.com/"
+        }
+      ],
+      "resultUrl": "https://weibo.com/",
+      "finishedAt": "2026-09-14T07:13:56.748Z"
+    },
+    {
+      "id": "task_1789367503985_zhihu_pgmfec",
+      "jobId": "job_1789367503985",
+      "platform": "zhihu",
+      "accountId": "acc_zhihu_1789366922712",
+      "accountNickname": "知乎创作者",
+      "contentType": "article",
+      "status": "cancelled",
+      "startedAt": "2026-09-14T06:31:43.985Z",
+      "attempt": 1,
+      "maxAttempts": 3,
+      "logs": [
+        {
+          "timestamp": "2026-09-14T06:31:43.985Z",
+          "level": "info",
+          "message": "创建任务：针对【知乎创作者】的 zhihu 发布"
+        },
+        {
+          "timestamp": "2026-09-14T07:13:53.400Z",
+          "level": "warn",
+          "message": "任务已被用户手动取消"
         }
       ]
     },
     {
-      "id": "task_1789361663672_douyin_a1a8xr",
-      "jobId": "job_1789361663671",
-      "platform": "douyin",
-      "accountId": "acc_douyin_1789361300829",
-      "accountNickname": "抖音美食官号",
-      "contentType": "video",
-      "status": "running",
-      "startedAt": "2026-09-14T04:54:23.672Z",
+      "id": "task_1789366958004_zhihu_l968gw",
+      "jobId": "job_1789366958004",
+      "platform": "zhihu",
+      "accountId": "acc_zhihu_1789366922712",
+      "accountNickname": "知乎创作者",
+      "contentType": "article",
+      "status": "success",
+      "startedAt": "2026-09-14T06:22:38.306Z",
       "attempt": 1,
       "maxAttempts": 3,
       "logs": [
         {
-          "timestamp": "2026-09-14T04:54:23.672Z",
+          "timestamp": "2026-09-14T06:22:38.004Z",
           "level": "info",
-          "message": "创建任务：针对【抖音美食官号】的 douyin 发布"
+          "message": "创建任务：针对【知乎创作者】的 zhihu 发布"
+        },
+        {
+          "timestamp": "2026-09-14T06:22:38.307Z",
+          "level": "info",
+          "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+        },
+        {
+          "timestamp": "2026-09-14 14:22:38",
+          "level": "info",
+          "message": "正在加载知乎专属 Persistent Profile: D:\\Auserproject\\xhsfb\\data\\profiles\\zhihu\\acc_zhihu_1789366922712"
+        },
+        {
+          "timestamp": "2026-09-14 14:22:39",
+          "level": "info",
+          "message": "已读取持久化 Cookie 列表: _zap, HMACCOUNT_BFESS, Hm_lvt_98beee57fd2ef70ccdd5ca52b9740c49, d_c0, captcha_session_v2, __snaker__id, gdxidpyhxdE, q_c1, __zse_ck, BEC, BEC, z_c0, BEC"
+        },
+        {
+          "timestamp": "2026-09-14 14:22:39",
+          "level": "info",
+          "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+        },
+        {
+          "timestamp": "2026-09-14 14:22:40",
+          "level": "info",
+          "message": "定位文章标题输入框并填入标题: 2026年多平台内容矩阵分发全流程指南与自动化实战"
+        },
+        {
+          "timestamp": "2026-09-14 14:22:41",
+          "level": "info",
+          "message": "定位正文富文本编辑器并注入正文内容..."
+        },
+        {
+          "timestamp": "2026-09-14 14:22:41",
+          "level": "info",
+          "message": "尝试添加话题: 自媒体运营, 内容矩阵, 效率工具, 自动化发布, 科技前沿"
+        },
+        {
+          "timestamp": "2026-09-14 14:22:43",
+          "level": "info",
+          "message": "点击【发布】按钮并监听平台发布网络响应..."
+        },
+        {
+          "timestamp": "2026-09-14 14:22:44",
+          "level": "success",
+          "message": "知乎专栏真实发布成功！线上地址: https://zhuanlan.zhihu.com/p/19650614"
+        }
+      ],
+      "resultUrl": "https://zhuanlan.zhihu.com/p/19650614",
+      "finishedAt": "2026-09-14T06:22:45.178Z"
+    },
+    {
+      "id": "task_1789365055881_zhihu_91rv7",
+      "jobId": "job_1789365055881",
+      "platform": "zhihu",
+      "accountId": "acc_zhihu_1789365024439",
+      "accountNickname": "1",
+      "contentType": "article",
+      "status": "running",
+      "startedAt": "2026-09-14T05:50:55.881Z",
+      "attempt": 1,
+      "maxAttempts": 3,
+      "logs": [
+        {
+          "timestamp": "2026-09-14T05:50:55.881Z",
+          "level": "info",
+          "message": "创建任务：针对【1】的 zhihu 发布"
         }
       ]
     },
     {
-      "id": "task_1789361663672_channels_omtp4r",
-      "jobId": "job_1789361663671",
-      "platform": "channels",
-      "accountId": "acc_channels_1789361077125",
-      "accountNickname": "微信视频号主号",
-      "contentType": "video",
-      "status": "running",
-      "startedAt": "2026-09-14T04:54:23.672Z",
-      "attempt": 1,
+      "id": "task_1789364875311_zhihu_1xqw2",
+      "jobId": "job_1789364875311",
+      "platform": "zhihu",
+      "accountId": "acc_zhihu_1789364203193",
+      "accountNickname": "天天",
+      "contentType": "article",
+      "status": "failed",
+      "startedAt": "2026-09-14T05:50:28.879Z",
+      "attempt": 3,
       "maxAttempts": 3,
       "logs": [
         {
-          "timestamp": "2026-09-14T04:54:23.672Z",
+          "timestamp": "2026-09-14T05:47:55.312Z",
           "level": "info",
-          "message": "创建任务：针对【微信视频号主号】的 channels 发布"
+          "message": "创建任务：针对【天天】的 zhihu 发布"
+        },
+        {
+          "timestamp": "2026-09-14T05:47:55.615Z",
+          "level": "info",
+          "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+        },
+        {
+          "timestamp": "2026-09-14 13:47:55",
+          "level": "info",
+          "message": "Playwright 正在拉起真实独立浏览器上下文..."
+        },
+        {
+          "timestamp": "2026-09-14 13:47:56",
+          "level": "info",
+          "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+        },
+        {
+          "timestamp": "2026-09-14 13:47:58",
+          "level": "error",
+          "message": "页面重定向至登录页，当前登录态已失效"
+        },
+        {
+          "timestamp": "2026-09-14T05:49:51.012Z",
+          "level": "info",
+          "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+        },
+        {
+          "timestamp": "2026-09-14 13:49:51",
+          "level": "info",
+          "message": "Playwright 正在拉起真实独立浏览器上下文..."
+        },
+        {
+          "timestamp": "2026-09-14 13:49:51",
+          "level": "info",
+          "message": "导航至知乎专栏创作者中心: https://zhuanlan.zhihu.com/write"
+        },
+        {
+          "timestamp": "2026-09-14 13:49:52",
+          "level": "error",
+          "message": "页面重定向至登录页，当前登录态已失效"
+        },
+        {
+          "timestamp": "2026-09-14T05:50:28.879Z",
+          "level": "info",
+          "message": "[zhihu] 正在调度 Python Playwright RPA 引擎实例执行真实发布..."
+        },
+        {
+          "timestamp": "2026-09-14 13:50:28",
+          "level": "info",
+          "message": "Playwright 正在拉起真实独立浏览器上下文..."
         }
-      ]
+      ],
+      "resultUrl": "",
+      "errorCode": "SESSION_MISSING",
+      "errorMessage": "账号未登录或未存储有效 Session，请在账号管理中扫码登录或重新授权",
+      "finishedAt": "2026-09-14T05:50:28.886Z"
     },
     {
-      "id": "task_1789361663672_douyin_l3rn3",
-      "jobId": "job_1789361663671",
-      "platform": "douyin",
-      "accountId": "acc_douyin_1789360927545",
-      "accountNickname": "测试抖音账号",
-      "contentType": "video",
-      "status": "running",
-      "startedAt": "2026-09-14T04:54:23.672Z",
+      "id": "task_1789364211850_zhihu_bwc2gd",
+      "jobId": "job_1789364211850",
+      "platform": "zhihu",
+      "accountId": "acc_zhihu_1789364203193",
+      "accountNickname": "天天",
+      "contentType": "note",
+      "status": "cancelled",
+      "startedAt": "2026-09-14T05:36:51.850Z",
       "attempt": 1,
       "maxAttempts": 3,
       "logs": [
         {
-          "timestamp": "2026-09-14T04:54:23.672Z",
+          "timestamp": "2026-09-14T05:36:51.850Z",
           "level": "info",
-          "message": "创建任务：针对【测试抖音账号】的 douyin 发布"
+          "message": "创建任务：针对【天天】的 zhihu 发布"
+        },
+        {
+          "timestamp": "2026-09-14T05:50:38.819Z",
+          "level": "warn",
+          "message": "任务已被用户手动取消"
         }
       ]
     }

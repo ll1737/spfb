@@ -15,46 +15,26 @@ class ToutiaoAdapter(BasePlatformAdapter):
 
     async def login(self, context: Any) -> LoginResult:
         return LoginResult(
-            success=True,
+            success=False,
             platform=self.platform_name,
-            status="waiting_scan",
-            qr_code_url="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://mp.toutiao.com/login?token=tt_auth"
+            status="error",
+            error_message="今日头条真实扫码登录适配器尚未配置"
         )
 
     async def validate_session(self, account: Dict[str, Any]) -> SessionStatus:
         return SessionStatus(
-            is_valid=True,
+            is_valid=False,
             platform=self.platform_name,
             account_id=account.get("id", ""),
-            nickname=account.get("nickname", "头条号作者")
+            nickname=account.get("nickname"),
+            error="今日头条真实 session 校验适配器尚未配置"
         )
 
     async def publish_article(self, payload: Dict[str, Any], account: Dict[str, Any]) -> PublishResult:
-        logs = [
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "info", "message": "Playwright 打开 mp.toutiao.com/profile_v4/graphic/publish"},
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "info", "message": f"填充头条文章排版与标题: {payload.get('title')}"},
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "success", "message": "今日头条文章发表成功"}
-        ]
-        return PublishResult(
-            success=True,
-            platform=self.platform_name,
-            status="success",
-            result_url=f"https://www.toutiao.com/article/{int(time.time()*1000)}/",
-            logs=logs
-        )
+        return self.not_configured_result("图文发布")
 
     async def publish_note(self, payload: Dict[str, Any], account: Dict[str, Any]) -> PublishResult:
-        logs = [
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "info", "message": "进入微头条短图文发布面板"},
-            {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "level": "success", "message": "微头条发布成功"}
-        ]
-        return PublishResult(
-            success=True,
-            platform=self.platform_name,
-            status="success",
-            result_url=f"https://www.toutiao.com/w/{int(time.time()*1000)}/",
-            logs=logs
-        )
+        return self.not_configured_result("微头条发布")
 
     async def publish_video(self, payload: Dict[str, Any], account: Dict[str, Any]) -> PublishResult:
         return await self.publish_article(payload, account)

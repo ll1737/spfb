@@ -1,6 +1,6 @@
 {
-  "appId": "com.multipublish.desk",
-  "productName": "Multi-Publish Desk",
+  "appId": "com.zhiyu.content",
+  "productName": "智域",
   "directories": {
     "output": "release"
   },
@@ -10,6 +10,20 @@
     "package.json"
   ],
   "extraResources": [
+    {
+      "from": "dist",
+      "to": "dist",
+      "filter": ["**/*"]
+    },
+    {
+      "from": "backend-go/bin/server.exe",
+      "to": "backend/server.exe"
+    },
+    {
+      "from": "backend-go/configs",
+      "to": "backend/configs",
+      "filter": ["**/*"]
+    },
     {
       "from": "services/worker",
       "to": "worker",

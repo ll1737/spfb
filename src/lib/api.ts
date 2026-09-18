@@ -8,7 +8,18 @@ import {
   User,
   AuthResponse,
   LoginPayload,
-  RegisterPayload
+  RegisterPayload,
+  EnterpriseDataResponse,
+  EnterpriseInfo,
+  Brand,
+  TeamMember,
+  CollaborationRule,
+  ModulePermissionRule,
+  CreatorPersona,
+  MemoryCategory,
+  MemoryItem,
+  Topic,
+  ContentPackage
 } from '../types';
 
 const BASE_URL = '/api';
@@ -66,6 +77,7 @@ async function authFetch(url: string, options: RequestInit = {}): Promise<Respon
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
+    if (res.status === 401) authStorage.clear();
     const errorText = await res.text();
     let message = `API Error (${res.status})`;
     try {
@@ -221,6 +233,147 @@ export const api = {
     return handleResponse(res);
   },
 
+  async startPlatformLogin(platform: string, id: string): Promise<{ success: boolean; status: string; loginSessionId?: string; errorMessage?: string }> {
+    const res = await authFetch(`${BASE_URL}/accounts/platform/${encodeURIComponent(platform)}/${encodeURIComponent(id)}/login/start`, {
+      method: 'POST'
+    });
+    return handleResponse(res);
+  },
+
+  async getPlatformQrCode(platform: string, id: string): Promise<{ success: boolean; status: string; qrCodeUrl?: string; errorMessage?: string }> {
+    const res = await authFetch(`${BASE_URL}/accounts/platform/${encodeURIComponent(platform)}/${encodeURIComponent(id)}/login/qrcode`);
+    return handleResponse(res);
+  },
+
+  async getPlatformLoginStatus(platform: string, id: string): Promise<{ success: boolean; status: string; isLoggedIn?: boolean; nickname?: string; avatarUrl?: string; cookieNames?: string[]; errorMessage?: string }> {
+    const res = await authFetch(`${BASE_URL}/accounts/platform/${encodeURIComponent(platform)}/${encodeURIComponent(id)}/login/status`);
+    return handleResponse(res);
+  },
+
+  async getCreators(): Promise<CreatorPersona[]> {
+    const res = await authFetch(`${BASE_URL}/creators`);
+    return handleResponse<CreatorPersona[]>(res);
+  },
+
+  async createCreator(data: Omit<CreatorPersona, 'id'>): Promise<CreatorPersona> {
+    const res = await authFetch(`${BASE_URL}/creators`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<CreatorPersona>(res);
+  },
+
+  async updateCreator(id: string, data: Partial<CreatorPersona>): Promise<CreatorPersona> {
+    const res = await authFetch(`${BASE_URL}/creators/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<CreatorPersona>(res);
+  },
+
+  async deleteCreator(id: string): Promise<{ success: boolean }> {
+    const res = await authFetch(`${BASE_URL}/creators/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    return handleResponse<{ success: boolean }>(res);
+  },
+
+  async getMemoryCategories(): Promise<MemoryCategory[]> {
+    const res = await authFetch(`${BASE_URL}/memory/categories`);
+    return handleResponse<MemoryCategory[]>(res);
+  },
+
+  async createMemoryCategory(data: Pick<MemoryCategory, 'name' | 'icon' | 'description'>): Promise<MemoryCategory> {
+    const res = await authFetch(`${BASE_URL}/memory/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<MemoryCategory>(res);
+  },
+
+  async deleteMemoryCategory(id: string): Promise<{ success: boolean }> {
+    const res = await authFetch(`${BASE_URL}/memory/categories/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    return handleResponse<{ success: boolean }>(res);
+  },
+
+  async getMemoryItems(categoryId?: string): Promise<MemoryItem[]> {
+    const suffix = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}` : '';
+    const res = await authFetch(`${BASE_URL}/memory/items${suffix}`);
+    return handleResponse<MemoryItem[]>(res);
+  },
+
+  async createMemoryItem(data: Omit<MemoryItem, 'id'>): Promise<MemoryItem> {
+    const res = await authFetch(`${BASE_URL}/memory/items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<MemoryItem>(res);
+  },
+
+  async deleteMemoryItem(id: string): Promise<{ success: boolean }> {
+    const res = await authFetch(`${BASE_URL}/memory/items/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    return handleResponse<{ success: boolean }>(res);
+  },
+
+  async getTopics(status?: string): Promise<Topic[]> {
+    const suffix = status ? `?status=${encodeURIComponent(status)}` : '';
+    const res = await authFetch(`${BASE_URL}/topics${suffix}`);
+    return handleResponse<Topic[]>(res);
+  },
+
+  async createTopic(data: Pick<Topic, 'title' | 'category' | 'tags' | 'angles'>): Promise<Topic> {
+    const res = await authFetch(`${BASE_URL}/topics`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<Topic>(res);
+  },
+
+  async deleteTopic(id: string): Promise<{ success: boolean }> {
+    const res = await authFetch(`${BASE_URL}/topics/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    return handleResponse<{ success: boolean }>(res);
+  },
+
+  async getContentPackages(): Promise<ContentPackage[]> {
+    const res = await authFetch(`${BASE_URL}/content-packages`);
+    return handleResponse<ContentPackage[]>(res);
+  },
+
+  async createContentPackage(data: Pick<ContentPackage, 'title' | 'masterContent' | 'topicId'>): Promise<ContentPackage> {
+    const res = await authFetch(`${BASE_URL}/content-packages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<ContentPackage>(res);
+  },
+
+  async deleteContentPackage(id: string): Promise<{ success: boolean }> {
+    const res = await authFetch(`${BASE_URL}/content-packages/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    return handleResponse<{ success: boolean }>(res);
+  },
+
+  async startZhihuLogin(id: string): Promise<{ success: boolean; status: string; loginSessionId?: string; errorMessage?: string }> {
+    return this.startPlatformLogin('zhihu', id);
+  },
+
+  async getZhihuQrCode(id: string): Promise<{ success: boolean; status: string; qrCodeUrl?: string; errorMessage?: string }> {
+    return this.getPlatformQrCode('zhihu', id);
+  },
+
+  async getZhihuLoginStatus(id: string): Promise<{ success: boolean; status: string; isLoggedIn?: boolean; nickname?: string; avatarUrl?: string; cookieNames?: string[]; errorMessage?: string }> {
+    return this.getPlatformLoginStatus('zhihu', id);
+  },
+
   async confirmLoginSession(
     sessionId: string,
     nickname?: string,
@@ -356,8 +509,109 @@ export const api = {
     return `${BASE_URL}/social-upload/export-cookie/${accountId}`;
   },
 
+  async exportSocialCookie(accountId: string, filename: string): Promise<void> {
+    const res = await authFetch(this.getExportSocialCookieUrl(accountId));
+    if (!res.ok) await handleResponse(res);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  },
+
   getWorkerScriptDownloadUrl(): string {
     return `${BASE_URL}/social-upload/worker-script`;
+  },
+
+  // Enterprise & Team APIs
+  async getEnterprise(): Promise<EnterpriseDataResponse> {
+    const res = await authFetch(`${BASE_URL}/enterprise`);
+    return handleResponse<EnterpriseDataResponse>(res);
+  },
+
+  async updateEnterprise(data: Partial<EnterpriseInfo>): Promise<{ enterprise: EnterpriseInfo; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async createBrand(data: { name: string; type?: 'main' | 'sub'; description?: string; iconText?: string }): Promise<{ brand: Brand; brands: Brand[]; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/brands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async switchBrand(brandId: string): Promise<{ currentBrand: Brand; brands: Brand[]; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/brands/switch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandId })
+    });
+    return handleResponse(res);
+  },
+
+  async deleteBrand(brandId: string): Promise<{ brands: Brand[]; currentBrand: Brand; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/brands/${brandId}`, {
+      method: 'DELETE'
+    });
+    return handleResponse(res);
+  },
+
+  async inviteMember(data: { name: string; email: string; role: string; assignedBrands?: string[] }): Promise<{ member: TeamMember; members: TeamMember[]; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async updateMember(memberId: string, data: Partial<TeamMember>): Promise<{ member: TeamMember; members: TeamMember[]; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/members/${memberId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async removeMember(memberId: string): Promise<{ members: TeamMember[]; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/members/${memberId}`, {
+      method: 'DELETE'
+    });
+    return handleResponse(res);
+  },
+
+  async updateCollaborationRule(rule: Partial<CollaborationRule>): Promise<{ collaborationRule: CollaborationRule; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/rules`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rule)
+    });
+    return handleResponse(res);
+  },
+
+  async getPermissionsMatrix(): Promise<{ permissionsMatrix: ModulePermissionRule[] }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/permissions`);
+    return handleResponse(res);
+  },
+
+  async updatePermissionsMatrix(matrix: ModulePermissionRule[]): Promise<{ permissionsMatrix: ModulePermissionRule[]; message: string }> {
+    const res = await authFetch(`${BASE_URL}/enterprise/permissions`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matrix })
+    });
+    return handleResponse(res);
   }
 };
-

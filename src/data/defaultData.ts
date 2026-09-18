@@ -1,4 +1,4 @@
-import { PlatformId, PlatformMeta, Account, ContentPayload } from '../types';
+import { PlatformId, PlatformMeta, Account, ContentPayload, LLMGatewaySettings, SystemSettings } from '../types';
 
 export const PLATFORMS_META: Record<PlatformId, PlatformMeta> = {
   douyin: {
@@ -219,7 +219,104 @@ export const PLATFORMS_META: Record<PlatformId, PlatformMeta> = {
   }
 };
 
-export const DEFAULT_SETTINGS: any = {
+export const DEFAULT_LLM_GATEWAY: LLMGatewaySettings = {
+  defaultProvider: 'deepseek',
+  temperature: 0.7,
+  maxTokens: 4096,
+  routing: {
+    topicMining: 'deepseek-chat',
+    masterContent: 'deepseek-reasoner',
+    platformAdapt: 'deepseek-chat',
+    videoStoryboard: 'doubao-pro-32k',
+    complianceCheck: 'deepseek-chat'
+  },
+  providers: {
+    deepseek: {
+      id: 'deepseek',
+      name: 'DeepSeek (深度求索)',
+      enabled: true,
+      apiKey: '',
+      baseUrl: 'https://api.deepseek.com/v1',
+      selectedModel: 'deepseek-chat',
+      availableModels: [
+        { id: 'deepseek-chat', name: 'DeepSeek-V3 (通用高性价比)', contextWindow: '64k', recommendedFor: '选题雷达、各平台文案派生、风控初筛', costTier: 'low' },
+        { id: 'deepseek-reasoner', name: 'DeepSeek-R1 (强深度推理)', contextWindow: '64k', recommendedFor: 'Master Content 母内容构建、深度专栏', costTier: 'medium' }
+      ]
+    },
+    doubao: {
+      id: 'doubao',
+      name: '火山引擎 / 豆包 (ByteDance Doubao)',
+      enabled: false,
+      apiKey: '',
+      baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
+      selectedModel: 'doubao-pro-32k',
+      availableModels: [
+        { id: 'doubao-pro-32k', name: 'Doubao-pro-32k (多模态与文案)', contextWindow: '32k', recommendedFor: '短视频口播脚本、分镜提示词、小红书图文', costTier: 'low' },
+        { id: 'doubao-lite-32k', name: 'Doubao-lite-32k (极致低延时)', contextWindow: '32k', recommendedFor: '实时敏感词检测、高频批量派生', costTier: 'low' }
+      ]
+    },
+    qwen: {
+      id: 'qwen',
+      name: '阿里通义千问 (Aliyun Qwen)',
+      enabled: false,
+      apiKey: '',
+      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      selectedModel: 'qwen-max',
+      availableModels: [
+        { id: 'qwen-max', name: 'Qwen-Max (旗舰超长上下文)', contextWindow: '32k', recommendedFor: '企业知识库 RAG、长视频脚本分镜拆解', costTier: 'medium' },
+        { id: 'qwen-plus', name: 'Qwen-Plus (高性价比均衡)', contextWindow: '128k', recommendedFor: '全网热点总结、全平台文案批量适配', costTier: 'low' }
+      ]
+    },
+    moonshot: {
+      id: 'moonshot',
+      name: '月之暗面 (Kimi / Moonshot)',
+      enabled: false,
+      apiKey: '',
+      baseUrl: 'https://api.moonshot.cn/v1',
+      selectedModel: 'moonshot-v1-32k',
+      availableModels: [
+        { id: 'moonshot-v1-32k', name: 'Moonshot-v1-32k (长文本记忆)', contextWindow: '32k', recommendedFor: '品牌知识库大文档解析、历史内容复盘', costTier: 'medium' }
+      ]
+    },
+    openai: {
+      id: 'openai',
+      name: 'OpenAI / Azure (国际通用)',
+      enabled: false,
+      apiKey: '',
+      baseUrl: 'https://api.openai.com/v1',
+      selectedModel: 'gpt-4o',
+      availableModels: [
+        { id: 'gpt-4o', name: 'GPT-4o (全模态旗舰)', contextWindow: '128k', recommendedFor: '跨语言国际化分发、复杂分镜视觉描述', costTier: 'high' },
+        { id: 'gpt-4o-mini', name: 'GPT-4o-mini (高速轻量)', contextWindow: '128k', recommendedFor: '海量标题生成、快速格式清洗', costTier: 'low' }
+      ]
+    },
+    ollama: {
+      id: 'ollama',
+      name: '本地离线模型 (Ollama / LocalAI)',
+      enabled: false,
+      apiKey: 'ollama-local',
+      baseUrl: 'http://localhost:11434/v1',
+      selectedModel: 'qwen2.5:7b',
+      availableModels: [
+        { id: 'qwen2.5:7b', name: 'Qwen2.5-7B (本地隐私运行)', contextWindow: '32k', recommendedFor: '企业内网无外网数据安全生产', costTier: 'low' },
+        { id: 'deepseek-r1:8b', name: 'DeepSeek-R1-Distill-8B (本地推理)', contextWindow: '32k', recommendedFor: '本地免费离线母内容撰写', costTier: 'low' }
+      ]
+    },
+    custom: {
+      id: 'custom',
+      name: '自定义 OpenAI 协议模型 (Custom)',
+      enabled: false,
+      apiKey: '',
+      baseUrl: '',
+      selectedModel: '',
+      availableModels: [
+        { id: 'custom-model', name: '自定义接入模型', contextWindow: 'Custom', recommendedFor: '私有化部署网关', costTier: 'medium' }
+      ]
+    }
+  }
+};
+
+export const DEFAULT_SETTINGS: SystemSettings = {
   workerUrl: 'http://localhost:8000',
   workerApiKey: 'sk_matrix_worker_default_2026',
   encryptionKeySet: true,
@@ -232,7 +329,8 @@ export const DEFAULT_SETTINGS: any = {
   enableStealth: true,
   usePatchright: true,
   humanTypingDelay: true,
-  socialAutoUploadPath: './social-auto-upload'
+  socialAutoUploadPath: './social-auto-upload',
+  llmGateway: DEFAULT_LLM_GATEWAY
 };
 
 export const INITIAL_ACCOUNTS: Account[] = [];

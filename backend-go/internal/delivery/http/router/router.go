@@ -1,0 +1,147 @@
+package router
+
+import (
+	"os"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"zhiyu-backend/internal/config"
+	"zhiyu-backend/internal/delivery/http/handler"
+	"zhiyu-backend/internal/delivery/http/middleware"
+)
+
+type Handlers struct {
+	Auth         *handler.AuthHandler
+	Enterprise   *handler.EnterpriseHandler
+	Account      *handler.AccountHandler
+	Publish      *handler.PublishHandler
+	Memory       *handler.MemoryHandler
+	Topic        *handler.TopicHandler
+	ContentPackage *handler.ContentPackageHandler
+	SocialUpload *handler.SocialUploadHandler
+	Settings     *handler.SettingsHandler
+}
+
+func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
+	if cfg.Server.Mode == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	r := gin.New()
+	r.Use(middleware.Logger())
+	r.Use(middleware.Recovery())
+	r.Use(middleware.CORS())
+
+	// Static route for snapshots
+	r.Static("/debug_snapshots", "./debug_snapshots")
+
+	// Public Health
+	r.GET("/api/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":    "healthy",
+			"framework": "Gin GORM Go 1.27",
+			"system":    "智域 (ZhiYu) Enterprise Backend",
+		})
+	})
+
+	api := r.Group("/api")
+	{
+		// Public Auth
+		api.GET("/auth/status", h.Auth.AuthStatus)
+		api.POST("/auth/login", h.Auth.Login)
+		api.POST("/auth/register", h.Auth.Register)
+		api.POST("/auth/logout", h.Auth.Logout)
+
+		// Public settings & worker probe
+		api.GET("/settings", h.Settings.GetSettings)
+		api.POST("/settings", h.Settings.UpdateSettings)
+		api.POST("/worker/ping", h.Settings.PingWorker)
+
+		// Public social-upload CLI generators
+		api.POST("/social-upload/cli-command", h.SocialUpload.GenerateCLI)
+		api.GET("/social-upload/export-cookie/:id", h.SocialUpload.ExportCookie)
+
+		// Protected Routes
+		authGroup := api.Group("")
+		authGroup.Use(middleware.Auth(cfg))
+		{
+			// Current User
+			authGroup.GET("/auth/me", h.Auth.Me)
+			authGroup.PUT("/auth/profile", h.Auth.UpdateProfile)
+			authGroup.POST("/auth/change-password", h.Auth.ChangePassword)
+
+			// Enterprise & Multi-Brand & RBAC
+			authGroup.GET("/enterprise", h.Enterprise.GetEnterprise)
+			authGroup.PUT("/enterprise", h.Enterprise.UpdateEnterprise)
+			authGroup.POST("/enterprise/brands", h.Enterprise.AddBrand)
+			authGroup.POST("/enterprise/brands/switch", h.Enterprise.SwitchBrand)
+			authGroup.DELETE("/enterprise/brands/:id", h.Enterprise.DeleteBrand)
+			authGroup.POST("/enterprise/members", h.Enterprise.AddMember)
+			authGroup.PUT("/enterprise/members/:id", h.Enterprise.UpdateMember)
+			authGroup.DELETE("/enterprise/members/:id", h.Enterprise.DeleteMember)
+			authGroup.PUT("/enterprise/rules", h.Enterprise.UpdateRules)
+			authGroup.GET("/enterprise/permissions", h.Enterprise.GetPermissions)
+			authGroup.PUT("/enterprise/permissions", h.Enterprise.UpdatePermissions)
+
+			// Accounts
+			authGroup.GET("/accounts", h.Account.ListAccounts)
+			authGroup.POST("/accounts", h.Account.AddAccount)
+			authGroup.POST("/accounts/platform/:platform/:id/login/start", h.Account.StartPlatformLogin)
+			authGroup.GET("/accounts/platform/:platform/:id/login/qrcode", h.Account.GetPlatformQRCode)
+			authGroup.GET("/accounts/platform/:platform/:id/login/status", h.Account.GetPlatformLoginStatus)
+			authGroup.PUT("/accounts/:id", h.Account.UpdateAccount)
+			authGroup.DELETE("/accounts/:id", h.Account.DeleteAccount)
+			authGroup.POST("/accounts/batch-delete", h.Account.BatchDelete)
+			authGroup.POST("/accounts/:id/verify", h.Account.VerifyAccount)
+			authGroup.POST("/accounts/login-session", h.Account.CreateLoginSession)
+			authGroup.GET("/accounts/login-session/:id", h.Account.GetLoginSession)
+			authGroup.POST("/accounts/login-session/:id/confirm", h.Account.ConfirmLoginSession)
+			authGroup.POST("/social-upload/import-cookie", h.SocialUpload.ImportCookie)
+
+			// Publish & Jobs & Tasks
+			authGroup.GET("/jobs", h.Publish.ListJobs)
+			authGroup.GET("/publish/:id", h.Publish.GetJob)
+			authGroup.POST("/publish", h.Publish.CreateJob)
+			authGroup.GET("/tasks", h.Publish.ListTasks)
+			authGroup.POST("/tasks/:id/retry", h.Publish.RetryTask)
+			authGroup.POST("/tasks/:id/cancel", h.Publish.CancelTask)
+
+			// Creators & Memory
+			authGroup.GET("/creators", h.Memory.ListCreators)
+			authGroup.POST("/creators", h.Memory.CreateCreator)
+			authGroup.PUT("/creators/:id", h.Memory.UpdateCreator)
+			authGroup.DELETE("/creators/:id", h.Memory.DeleteCreator)
+			authGroup.GET("/memory/categories", h.Memory.ListCategories)
+			authGroup.POST("/memory/categories", h.Memory.CreateCategory)
+			authGroup.DELETE("/memory/categories/:id", h.Memory.DeleteCategory)
+			authGroup.GET("/memory/items", h.Memory.ListItems)
+			authGroup.POST("/memory/items", h.Memory.CreateItem)
+			authGroup.DELETE("/memory/items/:id", h.Memory.DeleteItem)
+
+			// Topics
+			authGroup.GET("/topics", h.Topic.List)
+			authGroup.POST("/topics", h.Topic.Create)
+			authGroup.DELETE("/topics/:id", h.Topic.Delete)
+
+			// Content packages / Master Content
+			authGroup.GET("/content-packages", h.ContentPackage.List)
+			authGroup.POST("/content-packages", h.ContentPackage.Create)
+			authGroup.DELETE("/content-packages/:id", h.ContentPackage.Delete)
+		}
+	}
+
+	// Static SPA fallback
+	for _, distPath := range []string{"./dist", "../dist"} {
+		if fi, err := os.Stat(distPath); err == nil && fi.IsDir() {
+			r.Static("/assets", distPath+"/assets")
+			r.NoRoute(func(c *gin.Context) {
+				if !strings.HasPrefix(c.Request.URL.Path, "/api") && !strings.HasPrefix(c.Request.URL.Path, "/debug_snapshots") {
+					c.File(distPath + "/index.html")
+				}
+			})
+			break
+		}
+	}
+
+	return r
+}

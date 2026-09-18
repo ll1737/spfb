@@ -120,7 +120,11 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     try {
       const firstAcc = accounts.find((a) => selectedAccountIds.includes(a.id)) || accounts[0];
       const platform = firstAcc ? firstAcc.platform : 'douyin';
-      const accountName = firstAcc ? firstAcc.nickname : 'my_account';
+      if (!firstAcc) {
+        setErrorMsg('请先接入并选择一个真实平台账号');
+        return;
+      }
+      const accountName = firstAcc.nickname;
       
       const res = await api.generateCliCommand({
         platform,
@@ -149,22 +153,26 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const handleConfirm = async () => {
     setErrorMsg('');
     
-    // Check and resolve selected accounts against existing accounts
-    let finalSelectedIds = selectedAccountIds.filter((id) => accounts.some((a) => a.id === id));
-    
-    // If somehow empty but accounts exist, auto-select active ones to prevent blocked submit
-    if (finalSelectedIds.length === 0 && accounts.length > 0) {
-      const activeIds = accounts.filter((a) => a.status === 'active').map((a) => a.id);
-      finalSelectedIds = activeIds.length > 0 ? activeIds : [accounts[0].id];
-      setSelectedAccountIds(finalSelectedIds);
-    }
+    const finalSelectedIds = selectedAccountIds.filter((id) => accounts.some((a) => a.id === id && a.status === 'active'));
 
     if (finalSelectedIds.length === 0) {
       setErrorMsg('请先勾选至少一个目标平台账号（或先在账号管理中添加账号）！');
       return;
     }
 
-    const titleToUse = jobTitle.trim() || content.title?.trim() || `多平台矩阵分发_${new Date().toLocaleDateString()}`;
+    const titleToUse = jobTitle.trim() || content.title?.trim() || '';
+    if (!titleToUse) {
+      setErrorMsg('请输入真实内容标题');
+      return;
+    }
+    if (!content.content.trim()) {
+      setErrorMsg('请输入真实正文内容');
+      return;
+    }
+    if (publishMode === 'scheduled' && (!scheduledDateTime || Date.parse(scheduledDateTime) <= Date.now())) {
+      setErrorMsg('请选择一个未来的排期时间');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
