@@ -139,7 +139,12 @@ func SetupRouter(cfg *config.Config, h *Handlers) *gin.Engine {
 
 			// Topics
 			authGroup.GET("/topics", h.Topic.List)
+			authGroup.GET("/topics/overview", h.Topic.GetOverview)
 			authGroup.POST("/topics", h.Topic.Create)
+			authGroup.POST("/topics/sync-trending", h.Topic.SyncTrending)
+			authGroup.GET("/topics/preferences", h.Topic.GetPreferences)
+			authGroup.POST("/topics/preferences", h.Topic.SavePreferences)
+			authGroup.POST("/topics/generate-weekly-plan", h.Topic.GenerateWeeklyPlan)
 			authGroup.DELETE("/topics/:id", h.Topic.Delete)
 
 			// Content packages / Master Content

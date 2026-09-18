@@ -24,6 +24,9 @@ import {
   MemoryItem,
   KnowledgeDocument,
   Topic,
+  TopicType,
+  TopicOverviewStats,
+  TopicPreference,
   ContentPackage,
   ContentProject
 } from '../types';
@@ -368,13 +371,52 @@ export const api = {
     return handleResponse<{ success: boolean }>(res);
   },
 
-  async getTopics(status?: string): Promise<Topic[]> {
-    const suffix = status ? `?status=${encodeURIComponent(status)}` : '';
+  async getTopics(status?: string, type?: string, category?: string): Promise<Topic[]> {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (type) params.append('type', type);
+    if (category) params.append('category', category);
+    const suffix = params.toString() ? `?${params.toString()}` : '';
     const res = await authFetch(`${BASE_URL}/topics${suffix}`);
     return handleResponse<Topic[]>(res);
   },
 
-  async createTopic(data: Pick<Topic, 'title' | 'category' | 'tags' | 'angles'>): Promise<Topic> {
+  async getTopicOverview(): Promise<TopicOverviewStats> {
+    const res = await authFetch(`${BASE_URL}/topics/overview`);
+    return handleResponse<TopicOverviewStats>(res);
+  },
+
+  async syncTrendingTopics(industry?: string): Promise<{ message: string; topics: Topic[] }> {
+    const res = await authFetch(`${BASE_URL}/topics/sync-trending`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ industry })
+    });
+    return handleResponse<{ message: string; topics: Topic[] }>(res);
+  },
+
+  async getTopicPreferences(): Promise<TopicPreference> {
+    const res = await authFetch(`${BASE_URL}/topics/preferences`);
+    return handleResponse<TopicPreference>(res);
+  },
+
+  async saveTopicPreferences(data: Partial<TopicPreference>): Promise<TopicPreference> {
+    const res = await authFetch(`${BASE_URL}/topics/preferences`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse<TopicPreference>(res);
+  },
+
+  async generateWeeklyPlan(): Promise<{ message: string; plan: Topic[] }> {
+    const res = await authFetch(`${BASE_URL}/topics/generate-weekly-plan`, {
+      method: 'POST'
+    });
+    return handleResponse<{ message: string; plan: Topic[] }>(res);
+  },
+
+  async createTopic(data: Partial<Topic>): Promise<Topic> {
     const res = await authFetch(`${BASE_URL}/topics`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

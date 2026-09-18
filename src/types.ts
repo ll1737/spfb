@@ -203,19 +203,57 @@ export interface KnowledgeDocument {
   updatedAt: string;
 }
 
+export type TopicType = 'ai_recommended' | 'industry_hot' | 'user_qa' | 'reusable_viral';
+
 export interface Topic {
   id: string;
   orgId?: string;
   brandId?: string;
   title: string;
+  type?: TopicType;
   category?: string;
-  heatScore?: number;
+  industry?: string;
+  score?: number; // 综合推荐指数 (e.g. 93, 92, 89, 86)
+  heatScore?: number; // 热点指数
+  matchScore?: number; // 用户匹配度 / 新鲜度
+  commercialScore?: number; // 商业价值 / 平台适配
+  reason?: string; // AI 推荐依据与决策分析
+  sourcePlatform?: string;
+  sourceUrl?: string;
   tags?: string[];
   angles?: string[];
   status?: 'recommended' | 'adopted' | 'archived';
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface TopicContentGap {
+  category: string;
+  percentage: number;
+  priority?: string;
+}
+
+export interface TopicOverviewStats {
+  todayRecommendedCount: number;
+  industryHotCount: number;
+  userQaCount: number;
+  reusableViralCount: number;
+  contentGaps: TopicContentGap[];
+  currentIndustry?: string;
+  lastSyncedAt?: string;
+}
+
+export interface TopicPreference {
+  orgId?: string;
+  brandId?: string;
+  industry: string;
+  keywords: string;
+  platforms: string[];
+  autoSyncDaily: boolean;
+  syncHour: number;
+  updatedAt?: string;
+}
+
 
 export interface ContentPackage {
   id: string;
@@ -763,3 +801,5 @@ export interface ContentProject {
   masterContent?: MasterContent;
   createdAt: string;
 }
+
+

@@ -22,6 +22,7 @@ import (
 	"zhiyu-backend/internal/repository/mysql"
 	"zhiyu-backend/internal/repository/redis"
 	"zhiyu-backend/internal/service"
+	"zhiyu-backend/internal/topic"
 	"zhiyu-backend/pkg/logger"
 )
 
@@ -109,6 +110,7 @@ func main() {
 	learningService := learning.NewLearningService(db, aiGateway)
 	creatorService := creatorapp.NewService(creatorRepo, nil)
 	knowledgeService := knowledge.NewService(knowledgeRepo, nil)
+	topicService := topic.NewTopicService(topicRepo)
 
 	// 9. Initialize Handlers (Delivery Layer)
 	handlers := &router.Handlers{
@@ -118,7 +120,7 @@ func main() {
 		Publish:        handler.NewPublishHandler(pubService),
 		Memory:         handler.NewMemoryHandler(memRepo),
 		Creator:        handler.NewCreatorHandler(creatorService),
-		Topic:          handler.NewTopicHandler(topicRepo),
+		Topic:          handler.NewTopicHandler(topicRepo, topicService),
 		ContentPackage: handler.NewContentPackageHandler(contentPackageRepo),
 		ContentProject: handler.NewContentProjectHandler(contentProjectService, creatorService),
 		Calendar:       handler.NewCalendarHandler(calendarService),
