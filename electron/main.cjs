@@ -170,6 +170,14 @@ async function startApiService() {
     APP_ROOT: app.isPackaged ? process.resourcesPath : path.dirname(path.dirname(paths.serverPath))
   };
 
+  if (process.platform !== 'win32' && paths.serverPath && fs.existsSync(paths.serverPath)) {
+    try {
+      fs.chmodSync(paths.serverPath, 0o755);
+    } catch (err) {
+      console.warn('Failed to chmod server binary:', err);
+    }
+  }
+
   apiProcess = spawn(command, args, {
     cwd,
     env,

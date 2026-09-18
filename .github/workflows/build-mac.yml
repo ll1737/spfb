@@ -1,0 +1,58 @@
+name: Build macOS Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 3. Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: 4. Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 5. Install Dependencies
+        run: npm ci
+
+      - name: 6. Build Go Backend (macOS Binary)
+        run: |
+          cd backend-go
+          go build -o bin/server ./cmd/server
+          chmod +x bin/server
+
+      - name: 7. Build Frontend
+        run: npx vite build
+
+      - name: 8. Package Electron App (macOS DMG/ZIP)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npx electron-builder --mac
+
+      - name: 9. Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zhiyu-macOS-Installer
+          path: |
+            release/*.dmg
+            release/*.zip
+          retention-days: 14

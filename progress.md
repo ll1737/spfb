@@ -36,3 +36,5 @@
 - 新增 Topic 的企业隔离 CRUD 和真实选题页面，移除 TopicsView 的内置热点与 `setTimeout` 伪造挖掘；创建选题后保存到 MySQL，刷新仍可读取。
 - 修复 Electron 路径测试与当前 Go 后端架构不一致的问题，统一到 `backend-go/bin/server.exe`；`npm run build` 增加工作区 Go 缓存路径后通过。
 - 重启当前项目 Go 后端，启动日志确认 Creator、Memory、Topic 路由已注册；健康检查返回 200，带无效令牌访问 Creator/Topic 均返回 401（路由存在且受保护）。
+- 继续执行内容生产阶段：新增 ContentPackage/MasterContent 的企业隔离 CRUD 和真实内容中心页面，移除原内容包内置演示内容；新增 Topic/ContentPackage/Creator/Memory 四类 API 的前端调用。
+- 最终验证：`npm run lint`、Node 8 项测试、`npm run build`（Vite + Go）、`go test ./...` 均通过；当前运行中的 Go 服务验证四类新 API 对无效令牌均返回 401。

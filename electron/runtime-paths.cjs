@@ -6,17 +6,18 @@ function getRuntimePaths({ isPackaged, appPath, resourcesPath }) {
   const workerDir = isPackaged
     ? path.join(resourcesPath, 'worker')
     : path.join(repositoryRoot, 'services', 'worker');
+  const serverBinName = process.platform === 'win32' ? 'server.exe' : 'server';
   const serverCandidates = isPackaged
-    ? [path.join(resourcesPath, 'backend', 'server.exe')]
+    ? [path.join(resourcesPath, 'backend', serverBinName)]
     : [
-        path.join(repositoryRoot, 'backend-go', 'bin', 'server.exe'),
-        path.join(repositoryRoot, 'backend', 'server.exe')
+        path.join(repositoryRoot, 'backend-go', 'bin', serverBinName),
+        path.join(repositoryRoot, 'backend', serverBinName)
       ];
   const serverExe = serverCandidates.find(p => fs.existsSync(p)) || serverCandidates[0];
 
   return {
     serverPath: serverExe,
-    isGoServer: serverExe.endsWith('.exe'),
+    isGoServer: true,
     workerDir,
     workerMain: path.join(workerDir, 'main.py')
   };
