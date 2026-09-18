@@ -39,6 +39,10 @@ func (s *AccountService) ListAccounts(orgID, brandID string) ([]domain.AccountDT
 	return dtos, nil
 }
 
+func (s *AccountService) GetAccount(id string) (*domain.Account, error) {
+	return s.accRepo.FindByID(id)
+}
+
 func (s *AccountService) AddAccount(orgID, brandID string, acc *domain.Account) (*domain.AccountDTO, error) {
 	if err := ValidateAccountSession(acc); err != nil {
 		return nil, err

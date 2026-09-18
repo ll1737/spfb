@@ -163,6 +163,15 @@ func (c *WorkerClient) AccountLoginStatus(ctx context.Context, platform, account
 	return res, nil
 }
 
+func (c *WorkerClient) AccountValidate(ctx context.Context, platform, accountID, encryptedSession, nickname string) (map[string]interface{}, error) {
+	return c.accountLoginRequest(ctx, http.MethodPost, "/worker/accounts/validate", map[string]interface{}{
+		"id":               accountID,
+		"platform":         platform,
+		"encryptedSession": encryptedSession,
+		"nickname":         nickname,
+	})
+}
+
 func (c *WorkerClient) accountLoginRequest(ctx context.Context, method, endpoint string, body interface{}) (map[string]interface{}, error) {
 	workerURL := c.cfg.Server.WorkerURL
 	var reader *bytes.Reader

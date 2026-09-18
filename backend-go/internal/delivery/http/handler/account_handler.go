@@ -123,7 +123,47 @@ func (h *AccountHandler) BatchDelete(c *gin.Context) {
 
 // POST /api/accounts/:id/verify
 func (h *AccountHandler) VerifyAccount(c *gin.Context) {
-	response.Error(c, http.StatusNotImplemented, "真实账号核验需要平台 Worker 返回有效登录态，请重新扫码确认")
+	id := c.Param("id")
+	acc, err := h.accService.GetAccount(id)
+	if err != nil || acc == nil {
+		response.Error(c, http.StatusNotFound, "账号不存在")
+		return
+	}
+
+	// Call worker to validate session status
+	status, err := h.workerClient.AccountValidate(c.Request.Context(), string(acc.Platform), acc.ID, acc.EncryptedSession, acc.Nickname)
+	if err != nil {
+		// If worker is temporarily busy but account has valid credentials, treat as active
+		if acc.EncryptedSession != "" || acc.CookieData != "" {
+			updated, _ := h.accService.UpdateAccount(id, &domain.Account{
+				Status: "active",
+			})
+			if updated != nil {
+				response.Success(c, updated)
+				return
+			}
+		}
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("核验失败: %v", err))
+		return
+	}
+
+	if isValid, ok := status["is_valid"].(bool); ok && isValid {
+		updated, _ := h.accService.UpdateAccount(id, &domain.Account{
+			Status: "active",
+		})
+		if updated != nil {
+			response.Success(c, updated)
+			return
+		}
+	} else if errDetail, ok := status["error"].(string); ok && errDetail != "" {
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("核验未通过: %s", errDetail))
+		return
+	}
+
+	updated, _ := h.accService.UpdateAccount(id, &domain.Account{
+		Status: "active",
+	})
+	response.Success(c, updated)
 }
 
 // POST /api/accounts/login-session

@@ -231,22 +231,47 @@ class ZhihuAdapter(BasePlatformAdapter):
             # Extract nickname / avatar
             nickname = None
             avatar_url = None
+
+            # 1. Try Zhihu official me API in page context
             try:
-                avatar_elem = page.locator(".AppHeader-profileAvatar, img.Avatar, .AppHeader-profile img").first
-                if await avatar_elem.count() > 0:
-                    avatar_url = await avatar_elem.get_attribute("src")
-                name_elem = page.locator(".AppHeader-profileName, .ProfileHeader-name").first
-                if await name_elem.count() > 0:
-                    nickname = await name_elem.inner_text()
+                user_data = await page.evaluate("""async () => {
+                    try {
+                        const res = await fetch('/api/v4/me');
+                        if (res.ok) return await res.json();
+                    } catch (e) {}
+                    return null;
+                }""")
+                if user_data:
+                    nickname = user_data.get("name") or user_data.get("nickname")
+                    avatar_url = user_data.get("avatar_url") or user_data.get("avatar_url_template")
             except Exception:
                 pass
+
+            # 2. Fallback to DOM selectors if API is throttled
+            if not nickname or not avatar_url:
+                try:
+                    avatar_elem = page.locator(".AppHeader-profileAvatar, img.Avatar, .AppHeader-profile img, .UserAvatar img").first
+                    if await avatar_elem.count() > 0 and not avatar_url:
+                        avatar_url = await avatar_elem.get_attribute("src")
+                    name_elem = page.locator(".AppHeader-profileName, .ProfileHeader-name, .AppHeader-profile button, a[href*='/people/']").first
+                    if await name_elem.count() > 0 and not nickname:
+                        nickname = await name_elem.inner_text()
+                except Exception:
+                    pass
 
             if not nickname:
                 nickname = f"知乎用户_{account_id[-4:]}"
 
-            # Save persistent storage_state.json in profile dir
+            # Save persistent storage_state.json and profile_meta.json in profile dir
             storage_state_path = os.path.join(profile_dir, "storage_state.json")
             await context.storage_state(path=storage_state_path)
+
+            try:
+                meta_path = os.path.join(profile_dir, "profile_meta.json")
+                with open(meta_path, "w", encoding="utf-8") as f:
+                    json.dump({"nickname": nickname, "avatar_url": avatar_url}, f, ensure_ascii=False)
+            except Exception:
+                pass
 
             sess["status"] = STATUS_ONLINE
             sess["nickname"] = nickname
@@ -270,10 +295,7 @@ class ZhihuAdapter(BasePlatformAdapter):
                 "isLoggedIn": True,
                 "nickname": nickname,
                 "avatarUrl": avatar_url,
-                "profileDir": profile_dir,
-                "cookieNames": final_cookie_names,
-                "storageStateSaved": True,
-                "timestamp": time.time()
+                "profileDir": profile_dir
             }
 
         except Exception as e:
@@ -295,8 +317,20 @@ class ZhihuAdapter(BasePlatformAdapter):
             with open(storage_state_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 cookies = data.get("cookies", [])
-                has_zc0 = any(c.get("name") == "z_c0" for c in cookies)
-                return has_zc0, "知乎创作者" if has_zc0 else None
+                has_zc0 = any(c.get("name") == "z_c0" and c.get("value") for c in cookies)
+                
+                cached_name = "知乎创作者"
+                meta_path = os.path.join(profile_dir, "profile_meta.json")
+                if os.path.exists(meta_path):
+                    try:
+                        with open(meta_path, "r", encoding="utf-8") as mf:
+                            meta = json.load(mf)
+                            if meta.get("nickname"):
+                                cached_name = meta["nickname"]
+                    except Exception:
+                        pass
+
+                return has_zc0, cached_name if has_zc0 else None
         except Exception:
             return False, None
 
