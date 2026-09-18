@@ -36,28 +36,26 @@ export const Header: React.FC<HeaderProps> = ({
 
   const getBreadcrumbs = (tab: string) => {
     switch (tab) {
-      case 'dashboard':
-        return { section: '概览', title: '工作台' };
       case 'creators':
-        return { section: '智能创作', title: 'AI内容生产者' };
+        return { section: 'AI 内容创作', title: 'AI 创作者' };
       case 'topics':
-        return { section: '智能创作', title: 'AI智能选题' };
-      case 'content_packages':
-        return { section: '智能创作', title: '智能内容包' };
+        return { section: 'AI 内容创作', title: '选题池' };
       case 'editor':
-        return { section: '智能创作', title: '文案创作' };
+        return { section: 'AI 内容创作', title: '文案创作' };
+      case 'content_packages':
+        return { section: 'AI 内容创作', title: '内容中心' };
       case 'workflow':
-        return { section: '智能创作', title: '自动化工作流' };
+        return { section: 'AI 内容创作', title: '自动化工作流' };
       case 'assets':
         return { section: '内容资产', title: '素材中心' };
       case 'memory':
-        return { section: '内容资产', title: 'AI记忆中心' };
+        return { section: '内容资产', title: '知识与记忆' };
       case 'calendar':
-        return { section: '内容运营', title: '内容日历' };
+        return { section: '矩阵运营', title: '内容日历' };
       case 'tasks':
-        return { section: '内容运营', title: '发布中心' };
+        return { section: '矩阵运营', title: '发布中心' };
       case 'analytics':
-        return { section: '内容运营', title: '数据分析' };
+        return { section: '矩阵运营', title: '数据分析' };
       case 'accounts':
         return { section: '管理与设置', title: '平台账号' };
       case 'enterprise':
@@ -65,9 +63,9 @@ export const Header: React.FC<HeaderProps> = ({
       case 'plans':
         return { section: '管理与设置', title: '套餐与用量' };
       case 'settings':
-        return { section: '管理与设置', title: '系统与 Worker' };
+        return { section: '系统', title: '系统与 Worker' };
       default:
-        return { section: '智域', title: '智能创作与矩阵发布' };
+        return { section: '智域', title: 'AI 内容运营操作系统' };
     }
   };
 

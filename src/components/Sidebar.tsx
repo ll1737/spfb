@@ -1,23 +1,20 @@
 import React from 'react';
 import {
-  LayoutDashboard,
   Users2,
   Sparkles,
-  Package,
   PenTool,
-  Calendar,
-  ListTodo,
+  LayoutGrid,
+  GitFork,
   FolderKanban,
+  Brain,
+  Calendar,
+  Send,
   BarChart3,
-  BrainCircuit,
   Share2,
   Building2,
   CreditCard,
   Settings,
-  Zap,
-  Layers,
-  ChevronRight,
-  Workflow
+  Layers
 } from 'lucide-react';
 import { User } from '../types';
 
@@ -31,15 +28,17 @@ interface SidebarProps {
   onOpenProfile?: () => void;
 }
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  badge?: string | null;
+  badgeColor?: string;
+}
+
 interface NavSection {
   title: string;
-  items: {
-    id: string;
-    label: string;
-    icon: React.ElementType;
-    badge?: string | null;
-    badgeColor?: string;
-  }[];
+  items: NavItem[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -53,48 +52,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navSections: NavSection[] = [
     {
-      title: '概览',
-      items: [
-        { id: 'dashboard', label: '工作台', icon: LayoutDashboard, badge: null }
-      ]
-    },
-    {
       title: 'AI 内容创作',
       items: [
-        { id: 'creators', label: 'AI 创作者', icon: Users2, badge: null },
-        { id: 'topics', label: '选题池', icon: Sparkles, badge: null },
-        { id: 'editor', label: '文案创作', icon: PenTool, badge: null },
-        { id: 'content_packages', label: '内容中心', icon: Package, badge: null },
-        { id: 'workflow', label: '自动化工作流', icon: Workflow, badge: null }
+        { id: 'creators', label: 'AI 创作者', icon: Users2 },
+        { id: 'topics', label: '选题池', icon: Sparkles },
+        { id: 'editor', label: '文案创作', icon: PenTool },
+        { id: 'content_packages', label: '内容中心', icon: LayoutGrid },
+        { id: 'workflow', label: '自动化工作流', icon: GitFork }
       ]
     },
     {
       title: '内容资产',
       items: [
-        { id: 'assets', label: '素材中心', icon: FolderKanban, badge: null },
-        { id: 'memory', label: '知识与记忆', icon: BrainCircuit, badge: null }
+        { id: 'assets', label: '素材中心', icon: FolderKanban },
+        { id: 'memory', label: '知识与记忆', icon: Brain }
       ]
     },
     {
       title: '矩阵运营',
       items: [
-        { id: 'calendar', label: '内容日历', icon: Calendar, badge: null },
-        { id: 'tasks', label: '发布中心', icon: ListTodo, badge: pendingTasksCount > 0 ? `${pendingTasksCount} 排队` : null, badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
-        { id: 'analytics', label: '数据分析', icon: BarChart3, badge: null }
+        { id: 'calendar', label: '内容日历', icon: Calendar },
+        {
+          id: 'tasks',
+          label: '发布中心',
+          icon: Send,
+          badge: pendingTasksCount > 0 ? `${pendingTasksCount}` : null,
+          badgeColor: 'bg-indigo-500 text-white'
+        },
+        { id: 'analytics', label: '数据分析', icon: BarChart3 }
       ]
     },
     {
       title: '账号与组织',
       items: [
-        { id: 'accounts', label: '平台账号', icon: Share2, badge: `${activeAccountsCount}/${totalAccountsCount}`, badgeColor: activeAccountsCount > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-700/40 text-slate-400' },
-        { id: 'enterprise', label: '企业与团队', icon: Building2, badge: null },
-        { id: 'plans', label: '套餐与用量', icon: CreditCard, badge: null }
+        {
+          id: 'accounts',
+          label: '平台账号',
+          icon: Share2,
+          badge: `${activeAccountsCount}/${totalAccountsCount}`,
+          badgeColor:
+            activeAccountsCount > 0
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              : 'bg-slate-700/40 text-slate-400'
+        },
+        { id: 'enterprise', label: '企业与团队', icon: Building2 },
+        { id: 'plans', label: '套餐与用量', icon: CreditCard }
       ]
     },
     {
       title: '系统',
       items: [
-        { id: 'settings', label: '系统与 Worker', icon: Settings, badge: null }
+        { id: 'settings', label: '系统与 Worker', icon: Settings }
       ]
     }
   ];
@@ -135,9 +143,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onSelectTab(item.id)}
-                  className={`relative w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 group ${
+                  className={`relative w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
                     isActive
-                      ? 'text-white bg-gradient-to-r from-[rgba(130,109,255,0.28)] to-[rgba(130,109,255,0.08)] shadow-sm'
+                      ? 'text-white bg-gradient-to-r from-[rgba(130,109,255,0.32)] to-[rgba(130,109,255,0.12)] shadow-sm'
                       : 'text-[#b9c1d5] hover:bg-white/[0.06] hover:text-white'
                   }`}
                 >
@@ -148,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Icon
-                      className={`w-4 h-4 transition-colors ${
+                      className={`w-4 h-4 transition-colors shrink-0 ${
                         isActive ? 'text-[#b6abff]' : 'text-[#929db8] group-hover:text-white'
                       }`}
                     />
@@ -195,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 type="button"
                 onClick={onOpenProfile}
-                className="p-1 rounded-lg text-[#9aa3be] hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                className="p-1 rounded-lg text-[#9aa3be] hover:text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
                 title="个人设置"
               >
                 <Settings className="w-3.5 h-3.5" />
@@ -207,4 +215,3 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </aside>
   );
 };
-
