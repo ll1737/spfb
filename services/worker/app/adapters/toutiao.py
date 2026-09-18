@@ -159,8 +159,8 @@ class ToutiaoAdapter(BasePlatformAdapter):
 
         try:
             cookies = await context.cookies()
-            cookie_names = [c.get("name") for c in cookies]
-            has_auth = any(k in cookie_names for k in ["sessionid", "passport_csrf_token", "tt_webid"])
+            auth_cookies = [c for c in cookies if c.get("name") in ["sessionid", "sessionid_ss"] and c.get("value")]
+            has_auth = len(auth_cookies) > 0
 
             if not has_auth:
                 return {
