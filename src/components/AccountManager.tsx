@@ -171,10 +171,9 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
       setIsGeneratingQr(false);
       setActionMessage(`二维码已就绪，请使用手机【${PLATFORMS_META[selectedPlatform].name}】App 扫码`);
 
-      // 3. Polling real login status
-      pollTimerRef.current = setInterval(async () => {
+      // 3. Robust Polling real login status
+      const checkStatusNow = async () => {
         try {
-          // If QR code wasn't captured initially, try fetching again
           if (!qrUrl) {
             try {
               const qrRes = await api.getPlatformQrCode(selectedPlatform, tempAccId);
@@ -187,7 +186,7 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
 
           const statusRes = await api.getPlatformLoginStatus(selectedPlatform, tempAccId);
 
-          if (statusRes.isLoggedIn) {
+          if (statusRes.isLoggedIn || statusRes.status === 'ONLINE' || statusRes.status === 'SUCCESS') {
             clearPolling();
             const realAcc = statusRes.account || {
               id: tempAccId,
@@ -205,6 +204,13 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
             setIsAddModalOpen(false);
             setLoginSession(null);
             showToast(`🎉 账号【${statusRes.nickname || realAcc.nickname}】扫码成功并已自动入库！`, 'success');
+
+            // Trigger background verification check to confirm status
+            try {
+              await api.verifyAccount(realAcc.id);
+              onRefresh();
+            } catch {}
+            return true;
           } else if (statusRes.status === 'SCANNED') {
             setActionMessage('📱 手机已扫码！请在手机端点击【确认登录】...');
           } else if (statusRes.status === 'VERIFYING') {
@@ -216,7 +222,10 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
         } catch {
           // Ignore polling errors
         }
-      }, 2000);
+        return false;
+      };
+
+      pollTimerRef.current = setInterval(checkStatusNow, 1800);
     } catch (err: any) {
       setIsGeneratingQr(false);
       setActionMessage(err.message || '启动官方登录通道失败');
@@ -1236,15 +1245,55 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                         />
                       </div>
 
-                      {/* Refresh Button */}
+                      {/* Action Buttons */}
                       <div className="pt-2 border-t border-neutral-200/60 flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!loginSession?.accountId) return;
+                            setActionMessage('⏳ 正在主动核验平台授权状态...');
+                            try {
+                              const statusRes = await api.getPlatformLoginStatus(selectedPlatform, loginSession.accountId);
+                              if (statusRes.isLoggedIn || statusRes.status === 'ONLINE' || statusRes.status === 'SUCCESS') {
+                                clearPolling();
+                                const realAcc = statusRes.account || {
+                                  id: loginSession.accountId,
+                                  platform: selectedPlatform,
+                                  nickname: statusRes.nickname || `${PLATFORMS_META[selectedPlatform].name}账号`,
+                                  name: statusRes.nickname || `${PLATFORMS_META[selectedPlatform].name}账号`,
+                                  avatarUrl: statusRes.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${loginSession.accountId}`,
+                                  status: 'active',
+                                  group: groupInput.trim() || '扫码授权导入',
+                                  lastVerifiedAt: new Date().toISOString()
+                                };
+                                onAccountAdded(realAcc);
+                                onRefresh();
+                                setIsAddModalOpen(false);
+                                setLoginSession(null);
+                                showToast(`🎉 账号【${statusRes.nickname || realAcc.nickname}】扫码核验成功并已自动入库！`, 'success');
+                                try {
+                                  await api.verifyAccount(realAcc.id);
+                                  onRefresh();
+                                } catch {}
+                              } else {
+                                setActionMessage('📱 尚未检测到手机确认，请在手机 App 上点击【确认登录】后重试');
+                              }
+                            } catch (e: any) {
+                              setActionMessage('检测失败: ' + (e.message || '请重试'));
+                            }
+                          }}
+                          className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-all active:scale-95 inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>已在手机确认，立即检测入库</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
                             clearPolling();
                             handleStartQrLogin();
                           }}
-                          className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-200/60 rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                          className="px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-200/60 rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           <span>刷新二维码</span>
@@ -1255,7 +1304,7 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                             clearPolling();
                             setLoginSession(null);
                           }}
-                          className="px-3.5 py-2 text-neutral-400 hover:text-neutral-600 text-xs cursor-pointer"
+                          className="px-3 py-2 text-neutral-400 hover:text-neutral-600 text-xs cursor-pointer"
                         >
                           取消
                         </button>

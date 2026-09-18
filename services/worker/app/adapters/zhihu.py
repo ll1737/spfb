@@ -180,13 +180,28 @@ class ZhihuAdapter(BasePlatformAdapter):
         # If no in-memory active session, check existing profile cookies on disk
         if not sess or not sess.get("context"):
             is_valid, nickname = await self._check_profile_disk_status(profile_dir)
+            avatar_url = None
+            if is_valid:
+                try:
+                    meta_path = os.path.join(profile_dir, "profile_meta.json")
+                    if os.path.exists(meta_path):
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            meta = json.load(f)
+                            nickname = meta.get("nickname") or nickname
+                            avatar_url = meta.get("avatar_url")
+                except Exception:
+                    pass
+            enc_session = encrypt_session({"profile_dir": profile_dir, "nickname": nickname}) if is_valid else ""
             return {
                 "success": True,
                 "accountId": account_id,
                 "status": STATUS_ONLINE if is_valid else STATUS_NOT_LOGIN,
                 "isLoggedIn": is_valid,
                 "nickname": nickname,
-                "profileDir": profile_dir
+                "avatarUrl": avatar_url,
+                "profileDir": profile_dir,
+                "encryptedSession": enc_session,
+                "credentialMode": "local_profile"
             }
 
         context: BrowserContext = sess["context"]
@@ -273,6 +288,14 @@ class ZhihuAdapter(BasePlatformAdapter):
             except Exception:
                 pass
 
+            enc_session = encrypt_session({
+                "storage_state": storage_state_path,
+                "profile_dir": profile_dir,
+                "nickname": nickname,
+                "avatar_url": avatar_url,
+                "auth_cookies": [c for c in final_cookies if c.get("name") in ["z_c0", "_zap", "d_c0", "__zse_ck"]]
+            })
+
             sess["status"] = STATUS_ONLINE
             sess["nickname"] = nickname
             sess["avatar_url"] = avatar_url
@@ -295,7 +318,22 @@ class ZhihuAdapter(BasePlatformAdapter):
                 "isLoggedIn": True,
                 "nickname": nickname,
                 "avatarUrl": avatar_url,
-                "profileDir": profile_dir
+                "profileDir": profile_dir,
+                "encryptedSession": enc_session,
+                "sessionPreview": f"Playwright RPA 实时授权 (真实账号：{nickname})",
+                "credentialMode": "local_profile",
+                "account": {
+                    "id": account_id,
+                    "platform": self.platform_name,
+                    "nickname": nickname,
+                    "name": nickname,
+                    "avatarUrl": avatar_url or f"https://api.dicebear.com/7.x/identicon/svg?seed={account_id}",
+                    "status": "active",
+                    "encryptedSession": enc_session,
+                    "sessionPreview": f"Playwright RPA 实时授权 (真实账号：{nickname})",
+                    "lastVerifiedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                }
             }
 
         except Exception as e:
