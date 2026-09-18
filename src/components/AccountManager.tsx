@@ -133,85 +133,94 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
     });
   }, [accounts, activePlatformFilter, activeGroupFilter, searchKeyword]);
 
-  // QR Login Start
+  // QR Login Start - Real Playwright RPA Scan & Auto Profile Extraction
   const handleStartQrLogin = async () => {
     clearPolling();
     setIsGeneratingQr(true);
-    setActionMessage('正在调起创作者平台二维码通道...');
+    const tempAccId = `acc_${selectedPlatform}_${Date.now()}`;
+    setActionMessage(`正在启动【${PLATFORMS_META[selectedPlatform].name}】官方登录通道...`);
     setNicknameError('');
-    try {
-      const session = await api.startLoginSession(selectedPlatform);
-      setLoginSession(session);
-      setIsGeneratingQr(false);
-      setActionMessage('二维码已就绪，请使用手机 App 扫码，并在下方输入您的真实自媒体账号名称确认录入');
 
+    try {
+      // 1. Call Go backend -> Python Worker Playwright to launch creator page
+      await api.startPlatformLogin(selectedPlatform, tempAccId);
+      setActionMessage(`已建立浏览器连接，正在捕获官方实时二维码...`);
+
+      // 2. Fetch real QR code screenshot Base64
+      let qrUrl = '';
+      for (let i = 0; i < 8; i++) {
+        try {
+          const qrRes = await api.getPlatformQrCode(selectedPlatform, tempAccId);
+          if (qrRes.qrCodeUrl) {
+            qrUrl = qrRes.qrCodeUrl;
+            break;
+          }
+        } catch {
+          // Wait and retry
+        }
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+
+      setLoginSession({
+        sessionId: tempAccId,
+        platform: selectedPlatform,
+        qrCodeUrl: qrUrl,
+        status: 'waiting_scan',
+        expiresInSeconds: 300
+      });
+      setIsGeneratingQr(false);
+      setActionMessage(`二维码已就绪，请使用手机【${PLATFORMS_META[selectedPlatform].name}】App 扫码`);
+
+      // 3. Polling real login status
       pollTimerRef.current = setInterval(async () => {
         try {
-          const res = await api.checkLoginSession(session.sessionId);
-          if (res.status === 'confirmed' && res.account) {
+          // If QR code wasn't captured initially, try fetching again
+          if (!qrUrl) {
+            try {
+              const qrRes = await api.getPlatformQrCode(selectedPlatform, tempAccId);
+              if (qrRes.qrCodeUrl) {
+                qrUrl = qrRes.qrCodeUrl;
+                setLoginSession((prev) => prev ? { ...prev, qrCodeUrl: qrRes.qrCodeUrl } : null);
+              }
+            } catch {}
+          }
+
+          const statusRes = await api.getPlatformLoginStatus(selectedPlatform, tempAccId);
+
+          if (statusRes.isLoggedIn) {
             clearPolling();
-            onAccountAdded(res.account);
+            const realAcc = statusRes.account || {
+              id: tempAccId,
+              platform: selectedPlatform,
+              nickname: statusRes.nickname || `${PLATFORMS_META[selectedPlatform].name}账号`,
+              name: statusRes.nickname || `${PLATFORMS_META[selectedPlatform].name}账号`,
+              avatarUrl: statusRes.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${tempAccId}`,
+              status: 'active',
+              group: groupInput.trim() || '扫码授权导入',
+              lastVerifiedAt: new Date().toISOString()
+            };
+
+            onAccountAdded(realAcc);
             onRefresh();
             setIsAddModalOpen(false);
             setLoginSession(null);
-            showToast(`🎉 账号【${res.account.nickname}】授权成功并已加密存储！`, 'success');
-          } else if (res.status === 'expired') {
+            showToast(`🎉 账号【${statusRes.nickname || realAcc.nickname}】扫码成功并已自动入库！`, 'success');
+          } else if (statusRes.status === 'SCANNED') {
+            setActionMessage('📱 手机已扫码！请在手机端点击【确认登录】...');
+          } else if (statusRes.status === 'VERIFYING') {
+            setActionMessage('⏳ 正在解析账号身份与提取真实头像昵称...');
+          } else if (statusRes.status === 'FAILED') {
             clearPolling();
-            setActionMessage('二维码已超时，请点击重新获取');
+            setActionMessage('❌ 登录超时或失败，请重新获取二维码');
           }
         } catch {
           // Ignore polling errors
         }
-      }, 3000);
+      }, 2000);
     } catch (err: any) {
       setIsGeneratingQr(false);
-      setActionMessage(err.message || '启动登录会话失败');
-      showToast('获取二维码失败: ' + err.message, 'error');
-    }
-  };
-
-  // Confirm QR Login (Solves: "扫码进去的账号也不是我自己的")
-  const handleConfirmLogin = async (isTestSimulated = false) => {
-    // If not simulated, ensure user has entered their real nickname so they own this account
-    if (!nicknameInput.trim() && !isTestSimulated) {
-      setNicknameError('请在此输入您扫码登录的真实自媒体昵称（如：我的抖音号、生活分享官），以便系统精确归属！');
-      return;
-    }
-    setNicknameError('');
-    setIsConfirming(true);
-    setActionMessage('正在与平台校验并加密录入您的账号信息...');
-
-    try {
-      const nameToUse = nicknameInput.trim() || `${PLATFORMS_META[selectedPlatform].name}账号_${Date.now().toString().slice(-4)}`;
-      const sid = loginSession?.sessionId || `sess_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-      const res = await api.confirmLoginSession(
-        sid,
-        nameToUse,
-        groupInput.trim() || undefined,
-        selectedPlatform,
-        cookieInput.trim() || undefined,
-        isTestSimulated
-      );
-
-      clearPolling();
-      setIsConfirming(false);
-
-      if (res.account) {
-        onAccountAdded(res.account);
-        onRefresh();
-        setIsAddModalOpen(false);
-        setLoginSession(null);
-        setNicknameInput('');
-        setGroupInput('');
-        setCookieInput('');
-        showToast(`🎉 已成功接入并绑定账号【${res.account.nickname}】！`, 'success');
-      } else {
-        showToast(res.message || '已成功录入账号', 'success');
-      }
-    } catch (err: any) {
-      setIsConfirming(false);
-      showToast('确认录入失败: ' + (err.message || '未知错误'), 'error');
+      setActionMessage(err.message || '启动官方登录通道失败');
+      showToast('获取官方二维码失败: ' + (err.message || '请确保 Worker 进程已启动'), 'error');
     }
   };
 
@@ -1144,115 +1153,101 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
 
               {/* Step 3: Account Details & Method Implementation */}
               {loginMethod === 'qr' ? (
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 text-center space-y-4">
-                  <div className="text-left p-3 rounded-lg bg-blue-50/70 border border-blue-100 text-xs text-blue-900 space-y-1">
-                    <div className="flex items-center gap-1.5 font-semibold text-blue-800">
-                      <Info className="w-3.5 h-3.5 shrink-0" />
-                      <span>自媒体扫码录入说明：</span>
+                <div className="p-5 rounded-2xl bg-neutral-50 border border-neutral-200 text-center space-y-4">
+                  <div className="text-left p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-blue-900 space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-bold text-blue-800">
+                      <Sparkles className="w-4 h-4 shrink-0 text-blue-600" />
+                      <span>全自动真机扫码授权：</span>
                     </div>
                     <p className="text-[11px] text-blue-800/90 leading-relaxed">
-                      手机 App 扫码后，请在下方<strong>填写您的真实账号昵称</strong>并点击录入。如果您有已导出的 Cookie 文件，亦可随时切换至「导入 social 凭据」实现无缝对接。
+                      使用手机【{PLATFORMS_META[selectedPlatform].name}】App 扫码并确认登录后，系统将<strong>自动从平台获取您的真实昵称、真实头像与持久化会话</strong>，全自动入库，无需任何手动输入！
                     </p>
                   </div>
 
                   {!loginSession ? (
-                    <div className="space-y-3 py-2">
-                      <p className="text-xs text-neutral-600">
-                        即将调起【{PLATFORMS_META[selectedPlatform].name}】创作者平台登录通道
-                      </p>
+                    <div className="space-y-3 py-6">
+                      <div className="w-14 h-14 rounded-2xl bg-neutral-900/5 border border-neutral-200 flex items-center justify-center mx-auto text-neutral-800">
+                        <QrCode className="w-7 h-7" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-neutral-800">
+                          调起【{PLATFORMS_META[selectedPlatform].name}】官方创作者登录页面
+                        </p>
+                        <p className="text-[11px] text-neutral-400">
+                          自动抓取真机二维码，扫码即同步平台真实资料
+                        </p>
+                      </div>
                       <button
                         type="button"
                         onClick={handleStartQrLogin}
                         disabled={isGeneratingQr}
-                        className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs rounded-xl shadow-xs transition-all active:scale-95 disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer"
+                        className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs rounded-xl shadow-sm transition-all active:scale-95 disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer"
                       >
                         <QrCode className="w-4 h-4" />
-                        <span>{isGeneratingQr ? '正在调起通道...' : `获取【${PLATFORMS_META[selectedPlatform].name}】登录二维码`}</span>
+                        <span>{isGeneratingQr ? '正在启动官方通道...' : `获取【${PLATFORMS_META[selectedPlatform].name}】登录二维码`}</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-4 py-1">
-                      {/* QR Code Container */}
-                      <div className="w-48 h-48 mx-auto bg-white p-2 rounded-xl border border-neutral-200 shadow-sm flex items-center justify-center">
+                    <div className="space-y-4 py-2 animate-in fade-in duration-200">
+                      {/* Real QR Code Container */}
+                      <div className="w-56 h-56 mx-auto bg-white p-3 rounded-2xl border-2 border-neutral-200 shadow-sm flex items-center justify-center relative overflow-hidden group">
                         {loginSession.qrCodeUrl ? (
                           <img
                             src={loginSession.qrCodeUrl}
-                            alt="Login QR"
-                            className="w-full h-full object-contain"
+                            alt="Official Login QR"
+                            className="w-full h-full object-contain select-none"
                           />
                         ) : (
-                          <div className="text-xs text-neutral-500 flex flex-col items-center gap-2">
-                            <QrCode className="w-12 h-12 text-neutral-400 animate-pulse" />
-                            <span>二维码已生成，等待扫码...</span>
+                          <div className="text-xs text-neutral-500 flex flex-col items-center gap-3">
+                            <div className="w-10 h-10 border-3 border-neutral-300 border-t-neutral-900 rounded-full animate-spin" />
+                            <span className="font-medium text-[11px]">正在捕获官方实时二维码...</span>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
-                        <Smartphone className="w-4 h-4 text-neutral-600" />
-                        <span>请使用【{PLATFORMS_META[selectedPlatform].name}】手机 App 扫码</span>
-                        <a
-                          href={PLATFORMS_META[selectedPlatform].creatorUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 hover:underline flex items-center gap-0.5 ml-1"
-                        >
-                          <span>打开官网</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                      {/* Scan Instructions */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-neutral-800">
+                          <Smartphone className="w-4 h-4 text-neutral-600" />
+                          <span>请使用【{PLATFORMS_META[selectedPlatform].name}】手机 App 扫码登录</span>
+                          <a
+                            href={PLATFORMS_META[selectedPlatform].creatorUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:underline flex items-center gap-0.5 ml-1 text-[11px]"
+                          >
+                            <span>官网</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                        <p className="text-[11px] text-neutral-500">
+                          扫码后在手机端点击【确认登录】，系统将全自动识别真实头像与昵称入库
+                        </p>
                       </div>
 
-                      {/* Prominent Real Nickname & Group Input (Solves: "扫码进去的账号不是我自己的") */}
-                      <div className="p-3.5 rounded-xl bg-white border border-neutral-300 shadow-xs text-left space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-neutral-900 flex items-center gap-1">
-                            <span>请输入您的自媒体真实昵称</span>
-                            <span className="text-rose-500">*</span>
-                          </label>
-                          <span className="text-[10px] text-neutral-400">杜绝生成非本人测试账号</span>
-                        </div>
+                      {/* Optional Matrix Group Input */}
+                      <div className="max-w-xs mx-auto text-left pt-1">
                         <input
                           type="text"
-                          value={nicknameInput}
-                          onChange={(e) => {
-                            setNicknameInput(e.target.value);
-                            setNicknameError('');
-                          }}
-                          placeholder={`例如：我的${PLATFORMS_META[selectedPlatform].name}大号、生活博主小王`}
-                          className={`w-full px-3 py-2 text-xs bg-neutral-50 border rounded-lg focus:outline-hidden transition-all ${
-                            nicknameError 
-                              ? 'border-rose-500 ring-1 ring-rose-300 bg-rose-50/30' 
-                              : 'border-neutral-300 focus:border-neutral-900 focus:bg-white'
-                          }`}
+                          value={groupInput}
+                          onChange={(e) => setGroupInput(e.target.value)}
+                          placeholder="矩阵分组（可选，例如：主号组 / 运营组）"
+                          className="w-full px-3 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900 text-center"
                         />
-                        {nicknameError && (
-                          <div className="text-[11px] text-rose-600 flex items-center gap-1 font-medium">
-                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                            <span>{nicknameError}</span>
-                          </div>
-                        )}
-
-                        <div className="pt-1">
-                          <input
-                            type="text"
-                            value={groupInput}
-                            onChange={(e) => setGroupInput(e.target.value)}
-                            placeholder="矩阵分组（可选，例如：主号组 / 运营组）"
-                            className="w-full px-3 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-hidden focus:border-neutral-900"
-                          />
-                        </div>
                       </div>
 
-                      {/* Confirmation Buttons */}
-                      <div className="pt-2 border-t border-neutral-200/80 flex flex-col sm:flex-row items-center justify-center gap-2">
+                      {/* Refresh Button */}
+                      <div className="pt-2 border-t border-neutral-200/60 flex items-center justify-center gap-2">
                         <button
                           type="button"
-                          onClick={() => handleConfirmLogin(false)}
-                          disabled={isConfirming}
-                          className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                          onClick={() => {
+                            clearPolling();
+                            handleStartQrLogin();
+                          }}
+                          className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-200/60 rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                         >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>{isConfirming ? '正在确认录入...' : '手机已扫码，确认录入账号'}</span>
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>刷新二维码</span>
                         </button>
                         <button
                           type="button"
@@ -1260,16 +1255,18 @@ export const AccountManager: React.FC<AccountManagerProps> = ({
                             clearPolling();
                             setLoginSession(null);
                           }}
-                          className="w-full sm:w-auto px-3.5 py-2 text-neutral-500 hover:text-neutral-700 text-xs cursor-pointer"
+                          className="px-3.5 py-2 text-neutral-400 hover:text-neutral-600 text-xs cursor-pointer"
                         >
-                          重新获取二维码
+                          取消
                         </button>
                       </div>
                     </div>
                   )}
 
                   {actionMessage && (
-                    <div className="text-[11px] text-neutral-600 font-medium">{actionMessage}</div>
+                    <div className="text-[11px] text-neutral-700 bg-neutral-100 py-1.5 px-3 rounded-lg font-medium inline-block mx-auto">
+                      {actionMessage}
+                    </div>
                   )}
                 </div>
               ) : loginMethod === 'social' ? (

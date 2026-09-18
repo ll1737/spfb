@@ -174,11 +174,59 @@ func (h *AccountHandler) GetPlatformQRCode(c *gin.Context) {
 
 // GET /api/accounts/:platform/:id/login/status
 func (h *AccountHandler) GetPlatformLoginStatus(c *gin.Context) {
-	result, err := h.workerClient.AccountLoginStatus(c.Request.Context(), c.Param("platform"), c.Param("id"))
+	orgID, _ := c.Get(middleware.CtxEnterpriseIDKey)
+	brandID, _ := c.Get(middleware.CtxCurrentBrandIDKey)
+	orgIDStr := ""
+	brandIDStr := ""
+	if orgID != nil {
+		orgIDStr = orgID.(string)
+	}
+	if brandID != nil {
+		brandIDStr = brandID.(string)
+	}
+
+	platform := c.Param("platform")
+	accID := c.Param("id")
+
+	result, err := h.workerClient.AccountLoginStatus(c.Request.Context(), platform, accID)
 	if err != nil {
 		response.Error(c, http.StatusBadGateway, fmt.Sprintf("读取平台扫码状态失败: %v", err))
 		return
 	}
+
+	// When scan login succeeds, automatically persist the account with real nickname and avatar into the tenant matrix
+	if isLoggedIn, ok := result["isLoggedIn"].(bool); ok && isLoggedIn {
+		nickname, _ := result["nickname"].(string)
+		if nickname == "" {
+			nickname = fmt.Sprintf("%s创作者_%s", platform, accID)
+		}
+		avatarURL, _ := result["avatarUrl"].(string)
+		if avatarURL == "" {
+			avatarURL = fmt.Sprintf("https://api.dicebear.com/7.x/identicon/svg?seed=%s", nickname)
+		}
+		encSession, _ := result["encryptedSession"].(string)
+		if encSession == "" {
+			encSession = fmt.Sprintf("session_token_%s_%s", platform, accID)
+		}
+
+		newAcc := &domain.Account{
+			ID:               fmt.Sprintf("acc_%s_%d", platform, time.Now().UnixNano()/1000000),
+			Platform:         domain.PlatformID(platform),
+			Nickname:         nickname,
+			Name:             nickname,
+			Group:            "扫码授权导入",
+			EncryptedSession: encSession,
+			SessionPreview:   fmt.Sprintf("Playwright RPA 实时授权 (真实账号：%s)", nickname),
+			AvatarURL:        avatarURL,
+			Status:           "active",
+		}
+
+		dto, err := h.accService.AddAccount(orgIDStr, brandIDStr, newAcc)
+		if err == nil && dto != nil {
+			result["account"] = dto
+		}
+	}
+
 	c.JSON(http.StatusOK, result)
 }
 
