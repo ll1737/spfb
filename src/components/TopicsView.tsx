@@ -101,10 +101,10 @@ export const TopicsView: React.FC<TopicsViewProps> = ({
     setIsSyncing(true);
     try {
       const res = await api.syncTrendingTopics(prefIndustry);
-      showToast(`⚡ ${res.message || '已成功抓取并转化最新全网热搜选题！'}`);
+      showToast(`✨ ${res.message || '已成功更新最新推荐选题！'}`);
       await loadData();
     } catch (e: any) {
-      showToast('热点抓取失败: ' + (e.message || '请检查后端网络连接'));
+      showToast('推荐选题更新失败: ' + (e.message || '请检查后端网络连接'));
     } finally {
       setIsSyncing(false);
     }
@@ -238,17 +238,6 @@ export const TopicsView: React.FC<TopicsViewProps> = ({
           >
             <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-500" />
             <span>选题偏好</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSyncTrending}
-            disabled={isSyncing}
-            className="px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 border border-amber-500/30 text-xs font-semibold rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            title="实时抓取微博/抖音/知乎热搜并结合当前企业行业过滤"
-          >
-            <Zap className={`w-3.5 h-3.5 text-amber-600 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? '正在抓取全网热搜...' : '⚡ AI 实时抓取全网热点'}</span>
           </button>
 
           <button
@@ -451,7 +440,7 @@ export const TopicsView: React.FC<TopicsViewProps> = ({
                 onClick={handleSyncTrending}
                 className="px-4 py-2 bg-neutral-900 text-white text-xs font-bold rounded-xl cursor-pointer"
               >
-                ⚡ 立即抓取行业热搜生成选题
+                ✨ 智能生成推荐选题
               </button>
             </div>
           ) : (
@@ -659,8 +648,8 @@ export const TopicsView: React.FC<TopicsViewProps> = ({
                   <SlidersHorizontal className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-neutral-900">选题偏好与热点监控设置</h3>
-                  <p className="text-[11px] text-neutral-500">配置您企业所属的行业赛道与全网抓取规则</p>
+                  <h3 className="text-sm font-bold text-neutral-900">选题偏好与推荐设置</h3>
+                  <p className="text-[11px] text-neutral-500">配置您企业所属的行业赛道与内容推荐规则</p>
                 </div>
               </div>
               <button
@@ -689,7 +678,7 @@ export const TopicsView: React.FC<TopicsViewProps> = ({
                   <option value="自媒体运营">自媒体运营 (短视频运营 / 个人IP打造)</option>
                 </select>
                 <span className="text-[10px] text-neutral-400 mt-1 block">
-                  系统每日定时抓取微博/抖音热搜后，将根据此行业分类进行智能语义转化。
+                  系统每日将根据此行业分类与热门趋势进行智能语义转化与推荐。
                 </span>
               </div>
 
@@ -708,7 +697,7 @@ export const TopicsView: React.FC<TopicsViewProps> = ({
 
               <div>
                 <label className="text-xs font-bold text-neutral-800 block mb-1.5">
-                  监控热榜平台来源
+                  参考热门平台来源
                 </label>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   {['weibo', 'douyin', 'kuaishou', 'zhihu', 'xiaohongshu', 'baidu'].map((p) => {
@@ -749,7 +738,7 @@ export const TopicsView: React.FC<TopicsViewProps> = ({
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-200/80">
                 <div>
-                  <div className="text-xs font-bold text-neutral-800">每日 08:00 自动抓取更新</div>
+                  <div className="text-xs font-bold text-neutral-800">每日 08:00 自动更新推荐</div>
                   <div className="text-[10px] text-neutral-400">开启后每天早上自动将最新热榜选题注入选题池</div>
                 </div>
                 <input
